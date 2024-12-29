@@ -1,0 +1,7 @@
+Lista de cosas que hacer:
+    - bajar cto de datos
+    - AED
+    - evaluar otros ctos y determinar la eleccion
+    - descarga de modelos
+    - redaccion de modelos
+    - uso del modelo de menta

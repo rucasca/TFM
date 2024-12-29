@@ -1,0 +1,14 @@
+# Ignore compiled Python files across all directories
+**/__pycache__/
+
+
+# Ignore all contents of the data folder but allow the data folder to be tracked
+/data/*
+!/data/
+
+# Ignore all contents of the dataset folder but allow it to be tracked; the same with model checkpoints
+/datasets/*
+!/datasets/
+
+/models/*
+!/models/
