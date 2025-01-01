@@ -2,9 +2,9 @@
 **/__pycache__/
 
 
-# Ignore all contents of the data folder but allow the data folder to be tracked
+# Ignore all contents of the data folder but instances json file
 /data/*
-!/data/
+!/data/data.json
 
 # Ignore all contents of the dataset folder but allow it to be tracked; the same with model checkpoints
 /datasets/*
