@@ -1,14 +1,21 @@
-# Ignore compiled Python files across all directories
+# Se ignoran los carchivos de python compilados en cualquier parte del proyecto para subir al git
 **/__pycache__/
 
 
-# Ignore all contents of the data folder but instances json file
+# Se ignora todo lo del directioro data salvo el fichero data.json
 /data/*
 !/data/data.json
 
-# Ignore all contents of the dataset folder but allow it to be tracked; the same with model checkpoints
+
+# Se ignoran directorios donde se almacenan datos (demasiado grandes para el git)
+/src/lib/*
+/src/dataset/*
+
 /datasets/*
 !/datasets/
 
 /models/*
 !/models/
+
+/dataset/*
+!/dataset/

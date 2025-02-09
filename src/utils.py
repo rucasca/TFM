@@ -71,8 +71,29 @@ def download_zip(url:str, destination_folder:str, zip_filename:str):
 
 
 
-
+# Relativas a operaciones repetidas a lo largo del codigo para la ordenación de elementos
+def top_n_values(input_dict, n):
+    """
+    Devuelve un diccionario con las n claves que tienen los valores más altos.
     
+    Args:
+        input_dict (dict): El diccionario original.
+        n (int): El número de pares clave-valor a incluir en el nuevo diccionario.
+        
+    Returns:
+        dict: Un diccionario con las n claves de mayor valor.
+    """
+    if n <= 0:
+        return {}
+    
+    # ordenación las claves del diccionario según sus valores, en orden descendente
+    sorted_keys = sorted(input_dict, key=input_dict.get, reverse=True)
+    
+    top_keys = sorted_keys[:n]
+
+    top_dict = {key: input_dict[key] for key in top_keys}
+    
+    return top_dict 
 
 
 # FUNCIONES RELATIVAS A LA CARGA/ PREPROCESAMIENTO DE DATOS
@@ -167,14 +188,14 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
     return fig
 
 
-yaml_file = load_yaml_file()
-DIR_TRAIN_ANNOTATIONS = yaml_file["dirs"]["anotaciones"]["train"]
-DIR_TRAIN_IMGS = yaml_file["dirs"]["imagenes"]["train"]
-DIR_TRAIN_IMGS = os.path.join(os.getcwd(),"..", DIR_TRAIN_IMGS)
+# yaml_file = load_yaml_file()
+# DIR_TRAIN_ANNOTATIONS = yaml_file["dirs"]["anotaciones"]["train"]
+# DIR_TRAIN_IMGS = yaml_file["dirs"]["imagenes"]["train"]
+# DIR_TRAIN_IMGS = os.path.join(os.getcwd(),"..", DIR_TRAIN_IMGS)
 
-coco=COCO(os.path.join(os.path.dirname(__file__),"..", DIR_TRAIN_ANNOTATIONS))
-fig = plot_masks_given_id_image(118113, coco, yaml_file)
-plt.show()
+# coco=COCO(os.path.join(os.path.dirname(__file__),"..", DIR_TRAIN_ANNOTATIONS))
+# fig = plot_masks_given_id_image(118113, coco, yaml_file)
+# plt.show()
 
 # 2) Para la máscara predicha
 
