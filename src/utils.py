@@ -5,7 +5,7 @@ import yaml
 import os
 import numpy as np
 import requests
-import zipfile
+#import zipfile
 import matplotlib.pyplot as plt
 import cv2
 from pycocotools.coco import COCO
