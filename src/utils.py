@@ -5,11 +5,14 @@ import yaml
 import os
 import numpy as np
 import requests
-#import zipfile
+import zipfile
 import matplotlib.pyplot as plt
 import cv2
 from pycocotools.coco import COCO
 from matplotlib.patches import Patch
+from pycocotools.coco import COCO
+from PIL import Image
+import matplotlib.patches as mpatches
 
 
 
@@ -200,3 +203,175 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
 # 2) Para la máscara predicha
 
 
+
+
+def mask_generator(coco,image_id, ids_masks : list ,path_images,  threshold = 200):
+
+    ann_ids = coco.getAnnIds(imgIds=image_id, catIds=ids_masks, iscrowd=None)
+
+    image_info = coco.loadImgs(image_id)[0]
+
+    height, width = image_info['height'], image_info['width']
+
+    img_path = os.path.join(path_images,  image_info['file_name'])
+    img = Image.open(img_path).convert("RGB")
+
+    mask  = np.zeros((height, width), dtype=np.uint8)
+
+    if not ann_ids:
+        return img, mask
+    
+    anns = coco.loadAnns(ann_ids)
+
+    for ann in anns:
+        if ann['area'] >= threshold:
+            m = coco.annToMask(ann)
+            mask = np.maximum(mask, m * ann['category_id'])
+            m = coco.annToMask(ann)
+            # Se supone que no se solapan nunca mascaras, en el caso de que se solapen se toma la de id mayor
+            mask=np.maximum(mask,m*ann['category_id'])
+   
+    
+    return img, mask   
+
+
+# Idem pero en formato one hot encoded
+def mask_generator_one_hot(coco,image_id, path_images, ids_masks : list, threshold = 200):
+
+    img_info = coco.loadImgs(image_id)[0]
+
+    img_path = img_info['file_name']
+
+    img_path = os.path.join(path_images,  img_path)
+    img = Image.open(img_path).convert("RGB")
+
+    height, width = img_info['height'], img_info['width']
+    num_classes = len(ids_masks)
+    mask = np.zeros((height, width, num_classes + 1), dtype=np.uint8)  
+
+    ann_ids = coco.getAnnIds(imgIds=image_id, catIds=ids_masks, iscrowd=None)
+    anns = coco.loadAnns(ann_ids)
+
+    for ann in anns:
+        if ann['area'] > threshold:
+            class_id = ann['category_id']
+            if class_id in ids_masks:
+                class_index = ids_masks.index(class_id)  # position in mask channels
+                m = coco.annToMask(ann)
+                mask[:, :, class_index + 1] = np.maximum(mask[:, :, class_index + 1], m)
+
+    # Set background to 1 where all other channels are 0
+    mask[:, :, 0 ] = (mask[:, :, 1:].sum(axis=2) == 0).astype(np.uint8)
+
+
+    return img, mask  
+
+######  Funciones para representaciones gráficas  ########
+
+# Representacion de una imagen y sus máscaras dado su id
+# def plot_image_with_masks(image_id, masks, categories_ids, coco, images_path):
+#     image_info = coco.loadImgs(image_id)[0]
+#     img_path = os.path.join(images_path, image_info['file_name'])
+
+#     original_image = cv2.imread(img_path)
+#     print(img_path)
+#     original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+
+#     fig , axs = plt.subplots(3, 4, figsize=(15, 10))
+#     axs = axs.flatten() 
+    
+#     axs[0].imshow(original_image)
+#     axs[0].axis('off')
+#     axs[0].set_title('Image')
+    
+#     #print(f"We dhave {masks.shape[-1]}, {masks.shape}")
+#     for idx in range(masks.shape[-1]):
+        
+#         # if idx >= len(axs) - 1:  
+#         #     break
+
+#         mask = masks[:,:,idx]
+#         axs[idx + 1].imshow(mask)
+#         axs[idx + 1].axis('off')
+#         axs[idx + 1].set_title(f'{categories_ids[idx]}' if idx < len(categories_ids) else "background")
+    
+
+    
+#     [fig.delaxes(ax) for ax in axs.flatten() if not ax.has_data()]
+
+#     plt.tight_layout()
+#     plt.show()
+def plot_image_and_mask(image, mask, class_id_to_name: dict):
+    # Create a color map: assign a unique color for each class ID (0 is background)
+    class_ids = sorted([cid for cid in np.unique(mask)])
+    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))  # or any other colormap
+
+    # Plot
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+    ax[0].imshow(image)
+    ax[0].set_title("Image")
+    ax[0].axis("off")
+
+    # Use ListedColormap to map class IDs to colors
+    mask_colored = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
+    for i, cid in enumerate(class_ids):
+        mask_colored[mask == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+
+    ax[1].imshow(mask_colored)
+    ax[1].set_title("Mask")
+    ax[1].axis("off")
+
+    # Create legend
+    patches = [mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
+               for i, cid in enumerate(class_ids)]
+    ax[1].legend(handles=patches, bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.tight_layout()
+    plt.show()
+
+    return
+
+def plot_one_hot_encoded_masks(image_id, masks, categories_ids, coco, images_path):
+
+    masks = np.argmax(masks, axis=2)
+    plot_image_and_mask(image_id, masks, categories_ids, coco, images_path)
+
+    return
+
+
+
+def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
+
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+
+    id_objetives = category_info_objetive.keys()
+
+    colors = plt.cm.get_cmap('tab10', len(category_info_objetive.keys()))
+    patches = [mpatches.Patch(color=colors(i), label=category_info_objetive[cid])
+               for i, cid in enumerate(category_info_objetive.keys())]
+    
+    color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(id_objetives)}
+
+    # Draw boxes with labels
+    classess_found = []
+    for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
+        if(label in id_objetives and score > threshold):
+            x_min, y_min, x_max, y_max = box
+            width, height = x_max - x_min, y_max - y_min
+            color = color_map[label.item()]
+            rect = patches.Rectangle((x_min, y_min), width, height, linewidth=2,
+                                    edgecolor=color, facecolor='none')
+            ax.add_patch(rect)
+            ax.text(x_min, y_min - 10, f"P="+str(round(score.item(), 3)), color='white', fontsize=10,bbox=dict(facecolor=color, edgecolor='none', pad=1.5))
+            classess_found.append(label)
+
+    # Create legend
+    handles = [patches.Patch(color=color_map[cls], label=category_info_objetive[cls]) for cls in id_objetives if cls in classess_found]
+    ax.legend(handles=handles, loc='upper right')
+
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+
+    return
