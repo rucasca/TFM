@@ -130,7 +130,7 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
     DIR_TRAIN_IMGS = os.path.join(os.path.dirname(__file__),"..", DIR_TRAIN_IMGS)
 
 
-    # Cargo la imagen de memoria en primer lugar
+    # Se carga la imagen de memoria en primer lugar
     image = coco.loadImgs(id_image)[0]
     img_path = os.path.join(DIR_TRAIN_IMGS, image['file_name'])
     annotation_ids = coco.getAnnIds(imgIds=id_image)

@@ -1,6 +1,8 @@
 # Se ignoran los carchivos de python compilados en cualquier parte del proyecto para subir al git
 **/__pycache__/
-
+# Se ignoran los de la extension v2 y los de la extension .tfrecord
+**.v2
+**.tfrecord
 
 # Se ignora todo lo del directioro data salvo el fichero data.json
 /data/*
@@ -19,3 +21,5 @@
 
 /dataset/*
 !/dataset/
+
+/clean_dataset/*
