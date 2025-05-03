@@ -13,6 +13,7 @@ from matplotlib.patches import Patch
 from pycocotools.coco import COCO
 from PIL import Image
 import matplotlib.patches as mpatches
+import matplotlib.patches as patches
 
 
 
@@ -331,10 +332,10 @@ def plot_image_and_mask(image, mask, class_id_to_name: dict):
 
     return
 
-def plot_one_hot_encoded_masks(image_id, masks, categories_ids, coco, images_path):
+def plot_one_hot_encoded_masks(image, masks, categories_ids):
 
     masks = np.argmax(masks, axis=2)
-    plot_image_and_mask(image_id, masks, categories_ids, coco, images_path)
+    plot_image_and_mask(image, masks, categories_ids)
 
     return
 
@@ -345,18 +346,13 @@ def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
     fig, ax = plt.subplots()
     ax.imshow(image)
 
-    id_objetives = category_info_objetive.keys()
+    color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(category_info_objetive.keys())}
 
-    colors = plt.cm.get_cmap('tab10', len(category_info_objetive.keys()))
-    patches = [mpatches.Patch(color=colors(i), label=category_info_objetive[cid])
-               for i, cid in enumerate(category_info_objetive.keys())]
-    
-    color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(id_objetives)}
 
     # Draw boxes with labels
     classess_found = []
     for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
-        if(label in id_objetives and score > threshold):
+        if(label in category_info_objetive.keys() and score > threshold):
             x_min, y_min, x_max, y_max = box
             width, height = x_max - x_min, y_max - y_min
             color = color_map[label.item()]
@@ -367,11 +363,12 @@ def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
             classess_found.append(label)
 
     # Create legend
-    handles = [patches.Patch(color=color_map[cls], label=category_info_objetive[cls]) for cls in id_objetives if cls in classess_found]
+    handles = [patches.Patch(color=color_map[cls], label=category_info_objetive[cls]) for cls in category_info_objetive.keys() if cls in classess_found]
     ax.legend(handles=handles, loc='upper right')
 
     plt.axis('off')
     plt.tight_layout()
     plt.show()
+
 
     return
