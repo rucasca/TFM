@@ -37,7 +37,7 @@ def load_yaml_file() -> dict:
     
 
 
-# DESCARGA DE UN FICHERO ZIP   
+# DESCARGA DE UN FICHERO ZIP: empleado para la descarga directa del dataset COCO
 def download_zip(url:str, destination_folder:str, zip_filename:str):
 
     """Carga de un zip de internet"""
@@ -192,19 +192,14 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
     return fig
 
 
-# yaml_file = load_yaml_file()
-# DIR_TRAIN_ANNOTATIONS = yaml_file["dirs"]["anotaciones"]["train"]
-# DIR_TRAIN_IMGS = yaml_file["dirs"]["imagenes"]["train"]
-# DIR_TRAIN_IMGS = os.path.join(os.getcwd(),"..", DIR_TRAIN_IMGS)
-
-# coco=COCO(os.path.join(os.path.dirname(__file__),"..", DIR_TRAIN_ANNOTATIONS))
-# fig = plot_masks_given_id_image(118113, coco, yaml_file)
-# plt.show()
-
-# 2) Para la máscara predicha
 
 
 
+
+
+
+
+#########    FUNCIONES EMPLEADAS EN LA GENERACIÓN Y VISUALIZACIÓN DE MÁSCARAS      ############
 
 def mask_generator(coco,image_id, ids_masks : list ,path_images,  threshold = 200):
 
@@ -302,6 +297,8 @@ def mask_generator_one_hot(coco,image_id, path_images, ids_masks : list, thresho
 
 #     plt.tight_layout()
 #     plt.show()
+
+
 def plot_image_and_mask(image, mask, class_id_to_name: dict):
     # Create a color map: assign a unique color for each class ID (0 is background)
     class_ids = sorted([cid for cid in np.unique(mask)])
@@ -352,7 +349,9 @@ def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
     # Draw boxes with labels
     classess_found = []
     for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
-        if(label in category_info_objetive.keys() and score > threshold):
+        #print("checking acc", score)
+        if(label.item() in category_info_objetive.keys() and score > threshold):
+            
             x_min, y_min, x_max, y_max = box
             width, height = x_max - x_min, y_max - y_min
             color = color_map[label.item()]
