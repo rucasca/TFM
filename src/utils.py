@@ -336,41 +336,91 @@ def plot_one_hot_encoded_masks(image, masks, categories_ids):
 
     return
 
+def plot_one_hot_encoded_masks_norm(image, masks, categories_ids):
+
+    masks = np.argmax(masks, axis=0)
+    plot_image_and_mask(image, masks, categories_ids)
+
+    return
 
 
-def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
+def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
 
-    fig, ax = plt.subplots()
-    ax.imshow(image)
+    n = len(images)
+    cols = 2
+    rows = (n + 1) // cols
 
-    color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(category_info_objetive.keys())}
+    fig, axes = plt.subplots(rows, cols, figsize=(8 * cols, 6 * rows))
+    axes = axes.flatten() if n > 1 else [axes]
 
+    id_objetives = category_info_objetive.keys()
+    color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(id_objetives)}
 
-    # Draw boxes with labels
-    classess_found = []
-    for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
-        #print("checking acc", score)
-        if(label.item() in category_info_objetive.keys() and score > threshold):
-            
-            x_min, y_min, x_max, y_max = box
-            width, height = x_max - x_min, y_max - y_min
-            color = color_map[label.item()]
-            rect = patches.Rectangle((x_min, y_min), width, height, linewidth=2,
-                                    edgecolor=color, facecolor='none')
-            ax.add_patch(rect)
-            ax.text(x_min, y_min - 10, f"P="+str(round(score.item(), 3)), color='white', fontsize=10,bbox=dict(facecolor=color, edgecolor='none', pad=1.5))
-            classess_found.append(label)
+    for idx, (image, result) in enumerate(zip(images, results)):
+        ax = axes[idx]
+        ax.imshow(image)
+        classess_found = []
 
-    # Create legend
-    handles = [patches.Patch(color=color_map[cls], label=category_info_objetive[cls]) for cls in category_info_objetive.keys() if cls in classess_found]
-    ax.legend(handles=handles, loc='upper right')
+        for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
+            if label.item() in id_objetives and score > threshold:
+                x_min, y_min, x_max, y_max = box
+                width, height = x_max - x_min, y_max - y_min
+                color = color_map[label.item()]
+                rect = patches.Rectangle((x_min, y_min), width, height, linewidth=2,
+                                         edgecolor=color, facecolor='none')
+                ax.add_patch(rect)
+                ax.text(x_min, y_min - 10, f"P={score.item():.3f}", color='white', fontsize=10,
+                        bbox=dict(facecolor=color, edgecolor='none', pad=1.5))
+                classess_found.append(label)
 
-    plt.axis('off')
+        handles = [mpatches.Patch(color=color_map[cls], label=category_info_objetive[cls])
+                   for cls in id_objetives if cls in classess_found]
+        ax.legend(handles=handles, loc='upper right')
+        ax.axis('off')
+
+    # Hide any unused subplots
+    for i in range(len(images), len(axes)):
+        axes[i].axis('off')
+
     plt.tight_layout()
     plt.show()
 
-
     return
+
+
+# def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
+
+#     fig, ax = plt.subplots()
+#     ax.imshow(image)
+
+#     color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(category_info_objetive.keys())}
+
+
+#     # Draw boxes with labels
+#     classess_found = []
+#     for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
+#         #print("checking acc", score)
+#         if(label.item() in category_info_objetive.keys() and score > threshold):
+            
+#             x_min, y_min, x_max, y_max = box
+#             width, height = x_max - x_min, y_max - y_min
+#             color = color_map[label.item()]
+#             rect = patches.Rectangle((x_min, y_min), width, height, linewidth=2,
+#                                     edgecolor=color, facecolor='none')
+#             ax.add_patch(rect)
+#             ax.text(x_min, y_min - 10, f"P="+str(round(score.item(), 3)), color='white', fontsize=10,bbox=dict(facecolor=color, edgecolor='none', pad=1.5))
+#             classess_found.append(label)
+
+#     # Create legend
+#     handles = [patches.Patch(color=color_map[cls], label=category_info_objetive[cls]) for cls in category_info_objetive.keys() if cls in classess_found]
+#     ax.legend(handles=handles, loc='upper right')
+
+#     plt.axis('off')
+#     plt.tight_layout()
+#     plt.show()
+
+
+#     return
 
 
 def plot_differences(image, mask_gt, mask_predicted,class_id_to_name):
@@ -467,3 +517,12 @@ def plot_differences_batch(images, masks_gt, masks_predicted, class_id_to_name):
     plt.show()
 
     return
+
+def one_hot_encoder_masks(mask, category_info_objective):
+    target_classes = sorted(category_info_objective.keys())
+    one_hot_mask = np.zeros((len(target_classes), mask.shape[0], mask.shape[1]), dtype=np.uint8)
+    
+    for i, id_class in enumerate(target_classes):
+        one_hot_mask[i, :, :] = (mask == id_class).astype(np.uint8)
+    
+    return one_hot_mask
