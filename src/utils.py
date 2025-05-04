@@ -371,3 +371,99 @@ def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
 
 
     return
+
+
+def plot_differences(image, mask_gt, mask_predicted,class_id_to_name):
+    class_ids = sorted([cid for cid in np.unique(mask_gt)])
+    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))  # or any other colormap
+
+    # Plot
+    fig, ax = plt.subplots(1, 3, figsize=(15, 6))
+    ax[0].imshow(image)
+    ax[0].set_title("Image")
+    ax[0].axis("off")
+
+    # Use ListedColormap to map class IDs to colors
+    mask_colored = np.zeros((mask_gt.shape[0], mask_gt.shape[1], 3), dtype=np.uint8)
+    for i, cid in enumerate(class_ids):
+        mask_colored[mask_gt == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+
+    ax[1].imshow(mask_colored)
+    ax[1].set_title("Ground truth")
+    ax[1].axis("off")
+
+    mask_colored = np.zeros((mask_predicted.shape[0], mask_predicted.shape[1], 3), dtype=np.uint8)
+    for i, cid in enumerate(class_ids):
+        mask_colored[mask_predicted == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+
+    ax[2].imshow(mask_colored)
+    ax[2].set_title("Mask predicted")
+    ax[2].axis("off")
+
+    handles = [mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
+               for i, cid in enumerate(class_ids)]
+    ax[2].legend(handles=handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    plt.tight_layout()
+    plt.show()
+    return 
+
+def plot_differences_batch(images, masks_gt, masks_predicted, class_id_to_name):
+    """
+    Plot a batch of images with their ground truth and predicted masks.
+    
+    Args:
+        images (list of np.ndarray): List of input images.
+        masks_gt (list of np.ndarray): List of ground truth masks.
+        masks_predicted (list of np.ndarray): List of predicted masks.
+        class_id_to_name (dict): Mapping from class ID to class name.
+    """
+    n = len(images)
+    
+    all_class_ids = sorted({cid for mask in masks_gt for cid in np.unique(mask)})
+    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))  # or another colormap
+    
+    fig, axes = plt.subplots(n, 3, figsize=(15, 5 * n))
+    if n == 1:
+        axes = np.expand_dims(axes, 0)  # Ensure axes is 2D for consistency
+
+    for idx in range(n):
+
+        
+
+        image, mask_gt, mask_pred = images[idx], masks_gt[idx], masks_predicted[idx]
+        present_masks_image = sorted(np.unique(np.concatenate((mask_gt, mask_pred))))
+        
+        # Display image
+        axes[idx, 0].imshow(image)
+        axes[idx, 0].set_title(f"Imagen {idx}")
+        axes[idx, 0].axis("off")
+        
+        # Ground truth mask coloring
+        mask_colored_gt = np.zeros((*mask_gt.shape, 3), dtype=np.uint8)
+        for i, cid in enumerate(present_masks_image):
+            mask_colored_gt[mask_gt == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+        
+        axes[idx, 1].imshow(mask_colored_gt)
+        axes[idx, 1].set_title("Ground Truth")
+        axes[idx, 1].axis("off")
+        
+        # Predicted mask coloring
+        mask_colored_pred = np.zeros((*mask_pred.shape, 3), dtype=np.uint8)
+        for i, cid in enumerate(present_masks_image):
+            mask_colored_pred[mask_pred == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+        
+        axes[idx, 2].imshow(mask_colored_pred)
+        axes[idx, 2].set_title("Máscaras predichas")
+        axes[idx, 2].axis("off")
+
+        handles = [mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
+                   for i, cid in enumerate(present_masks_image)]
+        axes[idx, 2].legend(handles=handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+
+    
+    plt.tight_layout()
+    plt.show()
+
+    return
