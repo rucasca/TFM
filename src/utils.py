@@ -37,37 +37,31 @@ def load_yaml_file() -> dict:
     
 
 
-# DESCARGA DE UN FICHERO ZIP: empleado para la descarga directa del dataset COCO
+# DESCARGA DE UN FICHERO ZIP
 def download_zip(url:str, destination_folder:str, zip_filename:str):
-
-    """Carga de un zip de internet"""
-    destination_folder = os.path.join(os.path.dirname(__file__), destination_folder)
+    destination_folder   =    os.path.join(os.path.dirname(__file__),destination_folder)
     
-    os.makedirs(destination_folder, exist_ok=True)
-    zip_path = os.path.join(destination_folder, zip_filename)
+    os.makedirs(destination_folder,exist_ok=True)
+    zip_path = os.path.join(destination_folder,zip_filename)
     
-    # Lanza la petición
     response = requests.get(url)
 
-    
-    # Si devuelve 200 (exito), guarda en memoria en formato .zip
+    # La peticion puede devolver 200, en el caso exitoso, cualquier otro valor indica redireccion, fallo, etc y se ignora
     if response.status_code == 200:
         with open(zip_path, 'wb') as f:
             print(f"Fichero {zip_path} encontrado desde {url}")
             f.write(response.content)
 
-        print("Fichero descargado")
-
-        # Hace unzip del resultado
+        
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             
-
+            # Print descompresion del fichero
             zip_ref.extractall(destination_folder)
             print("Fichero descomprimido\n")
 
         os.remove(zip_path)
 
-        print(f"ZIP file downloaded to: {zip_path}")
+        print(f"ZIP file descargaod en {zip_path}")
     else:
         print(f"fallo en la descarga del fichero: {response.status_code}")
 
@@ -76,7 +70,9 @@ def download_zip(url:str, destination_folder:str, zip_filename:str):
 
 
 # Relativas a operaciones repetidas a lo largo del codigo para la ordenación de elementos
-def top_n_values(input_dict, n):
+
+# Esta primera empleada en la obtencion de las n claves con mayor value, empleada en varias ocasiones en el AED
+def top_n_values(input_dict:dict, n: int) -> dict :
     """
     Devuelve un diccionario con las n claves que tienen los valores más altos.
     
@@ -100,21 +96,19 @@ def top_n_values(input_dict, n):
     return top_dict 
 
 
-# FUNCIONES RELATIVAS A LA CARGA/ PREPROCESAMIENTO DE DATOS
+# Esta segunda guarda un np array, en este caso imagenes, en formato npz para un menor uso de memoria en el entrenamiento de modelos
 def save_numpy_array(np_array, nombre):
     """
     Almacena un numpy array n dimensional como.npz.
-
     Args:
-        np_array (tuple): imagen a almacenar.
-        nombre (str): nombre del archivo.
+        np_array: imagen a almacenar
+        nombre: nombre del archivo
+
     """  
 
     np_array_image, np_array_mask = np_array[0], np_array[1]
 
     dir = os.path.join(DIR_DATA_PREPROCESSED_TRAIN, nombre)
-      
-    # Lo cargamos con el compressed al contener mascaras, dado qeu son datos de caracter repetitivo
     np.savez_compressed(dir, image=np_array_image, mask =np_array_mask )
 
     return
@@ -123,32 +117,32 @@ def save_numpy_array(np_array, nombre):
 
 
 
-# Funciones relativas a el printeo de mascaras
-# 1) Para la el ground truth de la imagen
+############    FUNCIONES DE PLOTTING    ###############
+
+# Funcion apra visualizar el ground truth de la imagen dado su id
 def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure:
 
-    """Plotea la mascara de una imagen y la imagen dado su id"""
-
-
     DIR_TRAIN_IMGS = yaml_file["dirs"]["imagenes"]["train"]
+    # Necesario en este caso por estar contenido en un .py file en vez de un .ipynb ya que las rutas funcionan de forma distinta
     DIR_TRAIN_IMGS = os.path.join(os.path.dirname(__file__),"..", DIR_TRAIN_IMGS)
 
 
-    # Se carga la imagen de memoria en primer lugar
     image = coco.loadImgs(id_image)[0]
     img_path = os.path.join(DIR_TRAIN_IMGS, image['file_name'])
     annotation_ids = coco.getAnnIds(imgIds=id_image)
     annotations = coco.loadAnns(annotation_ids)
 
-    # Carga de los nombres de las categorias
     categories = coco.loadCats(coco.getCatIds())
     category_id_to_name = {category['id']: category['name'] for category in categories}
+    #print("categories are", category_id_to_name)
 
     original_image = cv2.imread(img_path)
     original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
-    fig , axs = plt.subplots(2,1, figsize=(15, 10))
-    axs = axs.flatten()  
 
+
+
+    fig,axs = plt.subplots(2,1, figsize=(15, 10))
+    axs= axs.flatten()  
     axs[0].imshow(original_image)
     axs[0].axis('off')
     axs[0].set_title('Imagen original')
@@ -157,17 +151,17 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
     # print(type(image))
     # print(image)
 
+    # Se inicializa todo como fondo
     matriz_base = np.zeros((*original_image.shape[:2], 3), dtype=np.uint8)
 
-    # Generamos colores aleatorios para las mascaras
-
-    # Garantizamos la reproducibilidad fijando la semilla
+    # Se generan colores aleatorios para cada clase
     np.random.seed(42) 
     colors = np.random.randint(0, 256, size=(len(annotations), 3))
     anotated = []
     colors_anotated = {}
 
-    # Dibujar cada máscara con un color único
+    # para cada máscara encontrada se sustituye su key de máscara en la matriz base
+    # cabe destacar (comprobado en el cto de datos) que no existen pixeles con más de 1 clase
     for ann, color in zip(annotations, colors[:len(annotations)]):
         label = ann['category_id'] 
         mask = coco.annToMask(ann)
@@ -177,15 +171,16 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
         else:
             colors_anotated[label] = color
             anotated.append(label)
+            # Se añade la clase encontrada a la leyenda, dado qeu se omiten las categorías no presentes
             legend_elements.append(Patch(facecolor=np.array(color) / 255, label=f'{category_id_to_name[label]}'))
 
         for c in range(3):  
-            matriz_base[:, :, c] += mask * color[c]
+            matriz_base[:,:,c]+=mask*color[c]
 
     axs[1].imshow(matriz_base)
     axs[1].axis('off')
     axs[1].set_title('Máscara')
-    plt.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(1.5, 1), title="Clase")
+    plt.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(1.5,1),title="Clase")
     plt.tight_layout()
     plt.show()
 
