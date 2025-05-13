@@ -115,6 +115,7 @@ def save_numpy_array(np_array, nombre):
       
 
 
+#### TODO: generar el docstring de las funciones restantes
 
 
 ############    FUNCIONES DE PLOTTING    ###############
@@ -188,74 +189,65 @@ def plot_masks_given_id_image(id_image:int, coco:COCO, yaml_file:dict) -> Figure
 
 
 
-
-
-
-
-
-
-#########    FUNCIONES EMPLEADAS EN LA GENERACIÓN Y VISUALIZACIÓN DE MÁSCARAS      ############
-
+# Función para la generación de la máscara de una imagen en formaro 3 canales
 def mask_generator(coco,image_id, ids_masks : list ,path_images,  threshold = 200):
 
-    ann_ids = coco.getAnnIds(imgIds=image_id, catIds=ids_masks, iscrowd=None)
-
+    ann_ids = coco.getAnnIds(imgIds=image_id,catIds=ids_masks,iscrowd=None)
     image_info = coco.loadImgs(image_id)[0]
-
-    height, width = image_info['height'], image_info['width']
-
+    height, width = image_info['height'],image_info['width']
     img_path = os.path.join(path_images,  image_info['file_name'])
     img = Image.open(img_path).convert("RGB")
 
+    # Mascara con todo fondo como base
     mask  = np.zeros((height, width), dtype=np.uint8)
-
     if not ann_ids:
         return img, mask
     
     anns = coco.loadAnns(ann_ids)
-
+    # Se itera por máscara etiquetada, si supera el tamaño del umbral (se ignoran máscaras pequeñas)
     for ann in anns:
         if ann['area'] >= threshold:
-            m = coco.annToMask(ann)
-            mask = np.maximum(mask, m * ann['category_id'])
-            m = coco.annToMask(ann)
-            # Se supone que no se solapan nunca mascaras, en el caso de que se solapen se toma la de id mayor
+            m= coco.annToMask(ann)
+            mask = np.maximum(mask,m*ann['category_id'])
+            m =coco.annToMask(ann)
+            # Se supone que no se solapan nunca mascaras, en el caso de que se solapen se toma la de id mayor (no sucede en este cto de datos)
             mask=np.maximum(mask,m*ann['category_id'])
    
     
     return img, mask   
 
 
-# Idem pero en formato one hot encoded
+# Idem pero en formato one hot encoded con N canales
 def mask_generator_one_hot(coco,image_id, path_images, ids_masks : list, threshold = 200):
 
-    img_info = coco.loadImgs(image_id)[0]
+    img_info =coco.loadImgs(image_id)[0]
 
     img_path = img_info['file_name']
 
     img_path = os.path.join(path_images,  img_path)
     img = Image.open(img_path).convert("RGB")
 
-    height, width = img_info['height'], img_info['width']
-    num_classes = len(ids_masks)
-    mask = np.zeros((height, width, num_classes + 1), dtype=np.uint8)  
+    height,width= img_info['height'], img_info['width']
+    num_classes= len(ids_masks)
+    mask= np.zeros((height,width,num_classes +1),dtype=np.uint8)  
 
-    ann_ids = coco.getAnnIds(imgIds=image_id, catIds=ids_masks, iscrowd=None)
-    anns = coco.loadAnns(ann_ids)
+    ann_ids= coco.getAnnIds(imgIds=image_id,catIds=ids_masks,iscrowd=None)
+    anns= coco.loadAnns(ann_ids)
 
     for ann in anns:
-        if ann['area'] > threshold:
-            class_id = ann['category_id']
+
+        # Omision de las mascaras que no superen un threshold de pixeles dado
+        if ann['area']> threshold:
+            class_id =ann['category_id']
             if class_id in ids_masks:
-                class_index = ids_masks.index(class_id)  # position in mask channels
-                m = coco.annToMask(ann)
-                mask[:, :, class_index + 1] = np.maximum(mask[:, :, class_index + 1], m)
+                class_index =ids_masks.index(class_id) 
+                m =coco.annToMask(ann)
+                mask[:,:,class_index+1] = np.maximum(mask[:,:,class_index+1],m)
 
-    # Set background to 1 where all other channels are 0
-    mask[:, :, 0 ] = (mask[:, :, 1:].sum(axis=2) == 0).astype(np.uint8)
+    mask[:,:,0] = (mask[:,:,1:].sum(axis=2)==0).astype(np.uint8)
 
 
-    return img, mask  
+    return img,mask  
 
 ######  Funciones para representaciones gráficas  ########
 
@@ -294,27 +286,30 @@ def mask_generator_one_hot(coco,image_id, path_images, ids_masks : list, thresho
 #     plt.show()
 
 
-def plot_image_and_mask(image, mask, class_id_to_name: dict):
-    # Create a color map: assign a unique color for each class ID (0 is background)
-    class_ids = sorted([cid for cid in np.unique(mask)])
-    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))  # or any other colormap
 
-    # Plot
+# Ploteo de imágenes junto con su mascara
+def plot_image_and_mask(image,mask,class_id_to_name: dict):
+    class_ids = sorted([cid for cid in np.unique(mask)])
+
+    # Uso de templates de colores predefinidas en matplot para que exista mas contraste entre clases de ids adyacentes, usando tab10
+    colors = plt.cm.get_cmap('tab10',len(class_id_to_name))  
+
     fig, ax = plt.subplots(1, 2, figsize=(12, 6))
     ax[0].imshow(image)
-    ax[0].set_title("Image")
+    ax[0].set_title("Imagen")
     ax[0].axis("off")
 
-    # Use ListedColormap to map class IDs to colors
-    mask_colored = np.zeros((mask.shape[0], mask.shape[1], 3), dtype=np.uint8)
-    for i, cid in enumerate(class_ids):
-        mask_colored[mask == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+    # Se incializa la mascara como todo fondo, y se itera añadiendo 
+    mask_colored = np.zeros((mask.shape[0],mask.shape[1],3),dtype=np.uint8)
+    for i,cid in enumerate(class_ids):
+        mask_colored[mask==cid] = (np.array(colors(i)[:3])*255).astype(np.uint8)
 
+    # print(mask_colored)
     ax[1].imshow(mask_colored)
-    ax[1].set_title("Mask")
+    ax[1].set_title("Máscara")
     ax[1].axis("off")
 
-    # Create legend
+    # generación de la leyenda
     patches = [mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
                for i, cid in enumerate(class_ids)]
     ax[1].legend(handles=patches, bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -324,6 +319,7 @@ def plot_image_and_mask(image, mask, class_id_to_name: dict):
 
     return
 
+# Automatizacion en el formato one hot encoded a partir de la anterior función
 def plot_one_hot_encoded_masks(image, masks, categories_ids):
 
     masks = np.argmax(masks, axis=2)
@@ -331,6 +327,8 @@ def plot_one_hot_encoded_masks(image, masks, categories_ids):
 
     return
 
+
+# Automatizacion en el formato one hot encoded a partir de la anterior función, en este caso para inputs que el canal de las cases sea el 0 en lugar del 2
 def plot_one_hot_encoded_masks_norm(image, masks, categories_ids):
 
     masks = np.argmax(masks, axis=0)
@@ -339,41 +337,46 @@ def plot_one_hot_encoded_masks_norm(image, masks, categories_ids):
     return
 
 
+
+# Representación de N  imagenes y sus máscaras de forma simultanea
 def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
 
+    # Calculo del numero de filas necesarias (se colocan 2 por fila)
     n = len(images)
-    cols = 2
-    rows = (n + 1) // cols
+    cols=2
+    rows=(n+1)//cols
 
-    fig, axes = plt.subplots(rows, cols, figsize=(8 * cols, 6 * rows))
-    axes = axes.flatten() if n > 1 else [axes]
+    fig,axes = plt.subplots(rows, cols, figsize=(8*cols,6*rows))
+    axes=axes.flatten() if n>1 else [axes]
 
-    id_objetives = category_info_objetive.keys()
-    color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(id_objetives)}
+    id_objetives=category_info_objetive.keys()
 
-    for idx, (image, result) in enumerate(zip(images, results)):
+    # idem que en las otras funciones, uso de un cto de colores predeterminado
+    color_map={cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(id_objetives)}
+
+    for idx,(image,result) in enumerate(zip(images,results)):
         ax = axes[idx]
         ax.imshow(image)
         classess_found = []
 
-        for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
-            if label.item() in id_objetives and score > threshold:
+        for box, score, label in zip(result['boxes'],result['scores'],result['labels']):
+            if label.item() in id_objetives and score>threshold:
+                #print("nueva clase que supera el umbral definido", label)
                 x_min, y_min, x_max, y_max = box
                 width, height = x_max - x_min, y_max - y_min
                 color = color_map[label.item()]
-                rect = patches.Rectangle((x_min, y_min), width, height, linewidth=2,
-                                         edgecolor=color, facecolor='none')
+                rect = patches.Rectangle((x_min, y_min),width,height,linewidth=2,
+                                         edgecolor=color,facecolor='none')
                 ax.add_patch(rect)
-                ax.text(x_min, y_min - 10, f"P={score.item():.3f}", color='white', fontsize=10,
-                        bbox=dict(facecolor=color, edgecolor='none', pad=1.5))
+                ax.text(x_min, y_min-10,f"P={score.item():.3f}",color='white',fontsize=10,
+                        bbox=dict(facecolor=color,edgecolor='none',pad=1.5))
                 classess_found.append(label)
 
-        handles = [mpatches.Patch(color=color_map[cls], label=category_info_objetive[cls])
+        handles=[mpatches.Patch(color=color_map[cls], label=category_info_objetive[cls])
                    for cls in id_objetives if cls in classess_found]
         ax.legend(handles=handles, loc='upper right')
         ax.axis('off')
 
-    # Hide any unused subplots
     for i in range(len(images), len(axes)):
         axes[i].axis('off')
 
@@ -418,17 +421,22 @@ def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
 #     return
 
 
+#######    PLOTTINGS DE COMPARATIVA DE RESULTADOS     ########
+
+
+# Diferencias entre imagen real, mascara predicha y ground truth
 def plot_differences(image, mask_gt, mask_predicted,class_id_to_name):
     class_ids = sorted([cid for cid in np.unique(mask_gt)])
-    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))  # or any other colormap
+    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))
 
-    # Plot
-    fig, ax = plt.subplots(1, 3, figsize=(15, 6))
+    # Se distribuye el plot en 1 unica linea de 3 columnas
+    fig, ax = plt.subplots(1,3, figsize=(15,6))
     ax[0].imshow(image)
-    ax[0].set_title("Image")
+    ax[0].set_title("Imagen")
     ax[0].axis("off")
 
-    # Use ListedColormap to map class IDs to colors
+
+    # Inicializacion del fondo
     mask_colored = np.zeros((mask_gt.shape[0], mask_gt.shape[1], 3), dtype=np.uint8)
     for i, cid in enumerate(class_ids):
         mask_colored[mask_gt == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
@@ -437,74 +445,65 @@ def plot_differences(image, mask_gt, mask_predicted,class_id_to_name):
     ax[1].set_title("Ground truth")
     ax[1].axis("off")
 
-    mask_colored = np.zeros((mask_predicted.shape[0], mask_predicted.shape[1], 3), dtype=np.uint8)
+    # Representacion de la mascara predicha
+    mask_colored = np.zeros((mask_predicted.shape[0],mask_predicted.shape[1],3),dtype=np.uint8)
     for i, cid in enumerate(class_ids):
-        mask_colored[mask_predicted == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
+        mask_colored[mask_predicted==cid]=(np.array(colors(i)[:3])*255).astype(np.uint8)
 
     ax[2].imshow(mask_colored)
-    ax[2].set_title("Mask predicted")
+    ax[2].set_title("Máscara predicha")
     ax[2].axis("off")
 
     handles = [mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
                for i, cid in enumerate(class_ids)]
-    ax[2].legend(handles=handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+    ax[2].legend(handles=handles,bbox_to_anchor=(1.050,1),loc='upper left')
 
     plt.tight_layout()
     plt.show()
     return 
 
+
+# Idem qeu la superior, pero con n imagenes
 def plot_differences_batch(images, masks_gt, masks_predicted, class_id_to_name):
-    """
-    Plot a batch of images with their ground truth and predicted masks.
-    
-    Args:
-        images (list of np.ndarray): List of input images.
-        masks_gt (list of np.ndarray): List of ground truth masks.
-        masks_predicted (list of np.ndarray): List of predicted masks.
-        class_id_to_name (dict): Mapping from class ID to class name.
-    """
+
+    # tantas filas como imagenes, 3 columnas en total como anteriormente
     n = len(images)
     
     all_class_ids = sorted({cid for mask in masks_gt for cid in np.unique(mask)})
-    colors = plt.cm.get_cmap('tab10', len(class_id_to_name))  # or another colormap
+    colors = plt.cm.get_cmap('tab10',len(class_id_to_name))  
     
-    fig, axes = plt.subplots(n, 3, figsize=(15, 5 * n))
+    fig, axes = plt.subplots(n,3,figsize=(15,5*n))
     if n == 1:
-        axes = np.expand_dims(axes, 0)  # Ensure axes is 2D for consistency
+        axes = np.expand_dims(axes,0)  # Ensure axes is 2D for consistency
 
     for idx in range(n):
 
         
+        image,mask_gt,mask_pred = images[idx],masks_gt[idx],masks_predicted[idx]
+        present_masks_image = sorted(np.unique(np.concatenate((mask_gt,mask_pred))))
+        
+        axes[idx,0].imshow(image)
+        axes[idx,0].set_title(f"Imagen {idx}")
+        axes[idx,0].axis("off")
+        mask_colored_gt=np.zeros((*mask_gt.shape,3),dtype=np.uint8)
+        for i,cid in enumerate(present_masks_image):
+            mask_colored_gt[mask_gt==cid]=(np.array(colors(i)[:3])*255).astype(np.uint8)
+        
+        axes[idx,1].imshow(mask_colored_gt)
+        axes[idx,1].set_title("Ground Truth")
+        axes[idx,1].axis("off")
+        
+        mask_colored_pred=np.zeros((*mask_pred.shape,3),dtype=np.uint8)
+        for i,cid in enumerate(present_masks_image):
+            mask_colored_pred[mask_pred==cid] =(np.array(colors(i)[:3])*255).astype(np.uint8)
+        
+        axes[idx,2].imshow(mask_colored_pred)
+        axes[idx,2].set_title("Máscaras predichas")
+        axes[idx,2].axis("off")
 
-        image, mask_gt, mask_pred = images[idx], masks_gt[idx], masks_predicted[idx]
-        present_masks_image = sorted(np.unique(np.concatenate((mask_gt, mask_pred))))
-        
-        # Display image
-        axes[idx, 0].imshow(image)
-        axes[idx, 0].set_title(f"Imagen {idx}")
-        axes[idx, 0].axis("off")
-        
-        # Ground truth mask coloring
-        mask_colored_gt = np.zeros((*mask_gt.shape, 3), dtype=np.uint8)
-        for i, cid in enumerate(present_masks_image):
-            mask_colored_gt[mask_gt == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
-        
-        axes[idx, 1].imshow(mask_colored_gt)
-        axes[idx, 1].set_title("Ground Truth")
-        axes[idx, 1].axis("off")
-        
-        # Predicted mask coloring
-        mask_colored_pred = np.zeros((*mask_pred.shape, 3), dtype=np.uint8)
-        for i, cid in enumerate(present_masks_image):
-            mask_colored_pred[mask_pred == cid] = (np.array(colors(i)[:3]) * 255).astype(np.uint8)
-        
-        axes[idx, 2].imshow(mask_colored_pred)
-        axes[idx, 2].set_title("Máscaras predichas")
-        axes[idx, 2].axis("off")
-
-        handles = [mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
+        handles=[mpatches.Patch(color=colors(i), label=class_id_to_name[cid])
                    for i, cid in enumerate(present_masks_image)]
-        axes[idx, 2].legend(handles=handles, bbox_to_anchor=(1.05, 1), loc='upper left')
+        axes[idx,2].legend(handles=handles,bbox_to_anchor=(1.052, 1),loc='upper left')
     
 
     
@@ -513,11 +512,14 @@ def plot_differences_batch(images, masks_gt, masks_predicted, class_id_to_name):
 
     return
 
+
+# Encoder de la mascara para obtener su formato one hot encoded
+
 def one_hot_encoder_masks(mask, category_info_objective):
-    target_classes = sorted(category_info_objective.keys())
-    one_hot_mask = np.zeros((len(target_classes), mask.shape[0], mask.shape[1]), dtype=np.uint8)
+    target_classes=sorted(category_info_objective.keys())
+    one_hot_mask=np.zeros((len(target_classes), mask.shape[0], mask.shape[1]), dtype=np.uint8)
     
     for i, id_class in enumerate(target_classes):
-        one_hot_mask[i, :, :] = (mask == id_class).astype(np.uint8)
+        one_hot_mask[i,:,:] = (mask==id_class).astype(np.uint8)
     
     return one_hot_mask
