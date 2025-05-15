@@ -394,7 +394,6 @@ def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
 #     color_map = {cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(category_info_objetive.keys())}
 
 
-#     # Draw boxes with labels
 #     classess_found = []
 #     for box, score, label in zip(result['boxes'], result['scores'], result['labels']):
 #         #print("checking acc", score)
@@ -409,7 +408,6 @@ def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
 #             ax.text(x_min, y_min - 10, f"P="+str(round(score.item(), 3)), color='white', fontsize=10,bbox=dict(facecolor=color, edgecolor='none', pad=1.5))
 #             classess_found.append(label)
 
-#     # Create legend
 #     handles = [patches.Patch(color=color_map[cls], label=category_info_objetive[cls]) for cls in category_info_objetive.keys() if cls in classess_found]
 #     ax.legend(handles=handles, loc='upper right')
 
