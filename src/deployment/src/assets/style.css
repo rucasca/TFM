@@ -80,3 +80,47 @@ h1 {
     padding: 10px 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
+
+
+
+
+
+
+
+/* Estilado dec botones */
+
+.button_save {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background-color: #10b981; 
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button_save:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+}
+
+.button_save:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.button_save i {
+    font-size: 1.1rem;
+    transition: transform 0.3s ease;
+}
+
+.button_save:hover i {
+    transform: rotate(-10deg);
+}
