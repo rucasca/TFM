@@ -27,3 +27,24 @@
         overflow-y: auto;
 }
 
+
+
+/* navbar-entry */
+.navbar-entry {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar-link {
+    text-decoration: none;
+    color: white; 
+    background-color: black;
+}
+
+.navbar-link:hover .navbar-entry {
+    background-color: #f0f0f0;  
+    color: black;            
+    cursor: pointer;
+}

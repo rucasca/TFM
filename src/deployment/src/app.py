@@ -2,12 +2,28 @@ import dash
 from dash import Dash, html, dcc
 
 app = Dash(__name__, use_pages=True)
+print("loaded pages are", dash.page_registry.values())
+
+
+icons = ["fas fa-robot","fas fa-clock-rotate-left"]
 
 navbar =   html.Div([
         html.Div(
-            dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"]),
+
+            html.Img(src='/assets/image.jpg', style={
+                'width': '80%',  
+                'display': 'block',  
+                'margin': '0 auto' 
+            }),
+
+            dcc.Link(
+                     html.Div([
+                         html.I(className= icons[i]),
+                         html.Span(page['name'])
+                     ], className= "navbar-entry"),
+                    href=page["relative_path"], className="navbar-link"),
             style={"margin": "10px 0"}
-        ) for page in dash.page_registry.values()
+        ) for i, page in enumerate(dash.page_registry.values())
     ], className= "navbar"),
 
 
