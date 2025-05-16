@@ -3,15 +3,19 @@ from dash import Dash, html, dcc
 
 app = Dash(__name__, use_pages=True)
 
-app.layout = html.Div([
-    html.H1('Multi-page app with Dash Pages'),
-    html.Div([
+navbar =   html.Div([
         html.Div(
-            dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"])
+            dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"]),
+            style={"margin": "10px 0"}
         ) for page in dash.page_registry.values()
-    ]),
-    dash.page_container
-])
+    ], className= "navbar"),
+
+
+app.layout = html.Div([
+    navbar, 
+    html.Div(dash.page_container , className= "content")
+    
+], style = "web-layout")
 
 if __name__ == '__main__':
     app.run(debug=True)
