@@ -1,8 +1,16 @@
 
 
 /* Layout style  */
+
+
+
+body {
+    margin: 0px;
+    font-family: 'Space Grotesk', sans-serif;
+}
+
 .content {
-    width: 80%;
+    width: 86%;
     padding:20px;
     box-sizing: border-box;
     height: 100vh;
@@ -19,12 +27,13 @@
 /* Navbar style */
 
 .navbar {
-        width: 20%;
-        background-color: #f0f0f0;
+        width: 14%;
+        background-color: #1E1E1E;
         padding: 20px ; 
         box-sizing: border-box;
         height: 100vh;
         overflow-y: auto;
+        border-right: 3px solid grey;
 }
 
 
@@ -35,6 +44,8 @@
     align-items: center;
     padding: 10px;
     transition: background-color 0.3s, color 0.3s;
+    border-radius: 5px;
+    margin-top: 10px;
 }
 
 .navbar-link {
@@ -47,4 +58,25 @@
     background-color: #f0f0f0;  
     color: black;            
     cursor: pointer;
+    font-weight: bold;
+}
+
+.navbar-entry > i{
+    margin-right: 15px
+}
+
+#pink-icon {
+    color: pink;
+}
+
+
+
+/* Estilado de titulos */
+
+h1 {
+    background-color: #1E1E1E;
+    border-radius: 5px;
+    color: #f0f0f0;
+    padding: 10px 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }

@@ -1,37 +1,41 @@
 import dash
 from dash import Dash, html, dcc
 
-app = Dash(__name__, use_pages=True)
-print("loaded pages are", dash.page_registry.values())
+app = Dash(__name__, use_pages=True, external_stylesheets=[
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+])
+# print("loaded pages are",[page['name'] for page in  dash.page_registry.values()])
 
 
-icons = ["fas fa-robot","fas fa-clock-rotate-left"]
+icons = ["fas fa-brain","fas fa-clock-rotate-left", "fas fa-chart-line"]
+class_colors_icons = ["pink-icon", "None", "None2"]
 
-navbar =   html.Div([
+navbar =  html.Div([
+        
+        html.Img(src="assets/web-icon.png", style={
+            'width': '80%',  
+            'display': 'block',  
+            'margin': '0 auto' ,
+            "margin-bottom": "100px"
+        })] + [
+
         html.Div(
-
-            html.Img(src='/assets/image.jpg', style={
-                'width': '80%',  
-                'display': 'block',  
-                'margin': '0 auto' 
-            }),
-
             dcc.Link(
                      html.Div([
-                         html.I(className= icons[i]),
+                         html.I(className= icons[i], id = class_colors_icons[i]),
                          html.Span(page['name'])
                      ], className= "navbar-entry"),
-                    href=page["relative_path"], className="navbar-link"),
-            style={"margin": "10px 0"}
+                    href=page["relative_path"], className="navbar-link", style={"margin": "10px 0", })
+                    
         ) for i, page in enumerate(dash.page_registry.values())
-    ], className= "navbar"),
+    ], className= "navbar")
 
 
 app.layout = html.Div([
     navbar, 
     html.Div(dash.page_container , className= "content")
     
-], style = "web-layout")
+], className = "web-layout")
 
 if __name__ == '__main__':
     app.run(debug=True)
