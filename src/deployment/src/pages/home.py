@@ -1,14 +1,12 @@
-# pages/home.py
 import dash
 from dash import html
 
-dash.register_page(__name__, path="/")
+dash.register_page(__name__)
 
 layout = html.Div([
-    html.H1("Home Page"),
-    html.P("Welcome to the home page!")
+    html.H1('This is our Archive page'),
+    html.Div('This is our Archive page content.'),
 ])
-
 
 # <button><i class="fas fa-upload"></i> Upload</button> fa-cloud-upload-alt
 # <button><i class="fas fa-image"></i> Picture</button>
