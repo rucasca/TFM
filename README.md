@@ -1,12 +1,34 @@
-# TFM
+# Segmentación semántica del dataset COCO mediante  UNET y arquitecturas ensemble
 
 
+A lo largo de este proyecto se aborda mediante diferentes notebooks el proceso completo de la resolución de un problema de **segmentación semántica** mediante diferentes **arquitecturas** tanto **convolucionales** como con arquitecturas que usan **mecanismos de atención**, además de su despliegue para la productivización mediante una aplicación web.
+El trabajo se ha estructurado siguiendo la metodología `CRISP-DM`, organizada de la siguiente manera:
 
-El trabajo se ha estructurado siguiendo la metodología CRISP-DM, organizada de la siguiente manera:
+### **Comprensión del negocio (Business Understanding en CRISP_DM) y comprensión de los datos (Data Understanding)**
+En estas dos fases se incluye tanto el entendimeinto del objetivo del proyecto como una primera carga y evaluación del conjunto de datos, donde se detectan patrones que influirán en fases posteriores de la metodología con el objetivo de la obtención de los mejores resultados posibles que se adecuen de forma óptima al problema definido.
 
-1) **Problem Understanding y Data Understanding (I)**: Se aborda en el siguiente fichero [`src/data_loading.ipynb`](src/data_loading.ipynb).
-2) **Data Understanding (II)**: Se desarrolla en el fichero [`src\exploratory_data_analysis.ipynb`](src\exploratory_data_analysis.ipynb).
-2) **Data Preparation **: presente en el fichero [`src\feature_extraction.ipynb`](src\feature_extraction.ipynb).
-2) **Data Modeling (I)**: primer modelo entrenado, en este caso la U-Net, que servirá como baseline, implementado en : [`src/data_analysis.ipynb`](src/data_analysis.ipynb).
-2) **Data Modeling (II)**: segundo modelo, en este caso un ensemble donde se usan modelos fundacionales [`src/data_analysis.ipynb`](src/data_analysis.ipynb).
-2) **Model evaluation**: comparativa de resultados de ambos modelos y conclusiones de los mismos[`src/data_analysis.ipynb`](src/data_analysis.ipynb).
+- La carga inicial y el entendimiento del objetivo se desarrollan en el notebook  [`src/data_loading.ipynb`](src/data_loading.ipynb).
+- El análisis exploratorio del conjunto de datos tiene lugar en el notebook [`src\exploratory_data_analysis.ipynb`](src\exploratory_data_analysis.ipynb).
+
+
+### **Preparación de los datos (Data Preparation)**
+A lo largo de esta fase se incluye la fase de comprensión de las imágenes en dimensiones comunes, la carga del dataset en un formato más eficiente para el entrenamiento de los modelos, en este caso `tf.tfrecord`, y el sampleamiento del conjunto de datos para disminuir el desvalanceo. Además, se definirá la fase de **data augmentation**, que permite la obtención de diferentes muestras a partir del conjunto de datos sampleado que forzarán al modelo a aprender.
+
+El contenido de esta fase se desarrolla en el notebook [`src\data_preprocessing.ipynb`](src\data_preprocessing.ipynb).
+
+### **Modelado de los Datos (Modeling)**
+Fase que comprende el entrenamiento de modelos que permitirán resolver el problema definido. En este caso los modelos y arquitecturas empleadas han sido:
+1) 
+
+
+### **Evaluación de los resultados (Evaluation)**
+
+
+### **Implementación y productivización (Deployment)**
+Fase que comprende la puesta en funcionamiento de pipelines que permiten el uso de los modelos en un entorno usable en la vida real. En este caso se ha productivizado el modelo mediante una aplicación web desarrollada en el framework `Dash`.
+
+Esta puede ser encontrada en el directorio [`src\deployment\src\app.py`](src\deployment\src\app.py) y al inicializarla despliega en la dirección ____ un aplicativo web que permite el uso de los pipeline de las arquitecturas ensemble implementadas de forma intiutiva.
+
+
+Para el 
+
