@@ -38,3 +38,13 @@ Esta puede ser encontrada en el directorio [`src\deployment\src\app.py`](src\dep
 
 
 
+
+Para la reproducción de los expermientos realizados se facilita un fichero `pyproject.toml` que contiene todas las librerias empleadas y sus versiones correspondientes.
+Para su instalación, se han de seguir los pasos siguientes: 
+1) Instalación de poetry mediante el *pip*
+2) Ejecución del comando por consola `poetry install`
+3) Ejecución de los notebook. En el caso de que VSCode no seleccione el entorno creado de forma automática, selección manual del mismo mediante `CTRL + SHIT + P` -> Select Python interpreter
+4) Para el despliegie de la web, ejecutar el fichero [`src\deployment\src\app.py`](src\deployment\src\app.py)
+
+
+
