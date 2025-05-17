@@ -11,7 +11,7 @@ body {
 
 .content {
     width: 86%;
-    padding:20px;
+    padding: 5px 10px;
     box-sizing: border-box;
     height: 100vh;
     overflow-y: auto;
@@ -71,17 +71,35 @@ body {
 
 
 
-/* Estilado de titulos */
+/* Estilado de titulos y parrafos*/
 
 h1 {
     background-color: #1E1E1E;
     border-radius: 5px;
     color: #f0f0f0;
-    padding: 10px 20px;
+    padding: 20px 25px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    font-size: 25px;
+    text-align: center;
 }
 
+.p-info {
+    font-size: 16px;
+    padding: 10px 2px;
+}
 
+label {
+    font-size: 13px;
+}
+
+.Select-value-label {
+    font-size: 14px;
+}
+
+.Select-menu {
+    font-size: 14px;
+    font-weight: normal;
+}
 
 
 
@@ -123,4 +141,44 @@ h1 {
 
 .button_save:hover i {
     transform: rotate(-10deg);
+}
+
+
+.button-inference{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    background-color: #1E1E1E; 
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+}
+
+.button-inference:hover {
+    background-color: #2e2e2e;
+    transform: translateY(-2px);
+}
+
+
+
+.button-inference i{
+    margin-right: 15px
+}
+
+
+
+/* Estilado de la pagina Inferencia.py */
+.container-settings {
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    border: 1px solid grey;
+    padding: 10px 20px 20px 20px;
 }

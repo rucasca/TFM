@@ -9,6 +9,8 @@ import io
 from PIL import Image
 import numpy as np
 import os
+import dash_daq as daq
+
 
 
 dash.register_page(__name__, path  = "/", name = "Inferencia")
@@ -19,6 +21,27 @@ RESULT_INFERENCE = None
 FILENAME = None
 
 
+CONS_DIV_ERROR_CASE1 = html.Div("❌ Formato no soportado (admite .png y .jpg)", style={
+                'color': 'rgb(211, 47, 47)',
+                'fontWeight': 'bold',
+                'padding': '10px',
+                'border': '1px solid rgb(211, 47, 47)',
+                'borderRadius': '5px',
+                'backgroundColor': 'rgb(255, 235, 238)',
+                "margin-top": "10px",
+            })
+
+CONS_DIV_ERROR_CASE2 = html.Div("❌ Error en el procesamiento del fichero", style={
+                'color': 'rgb(211, 47, 47)',
+                'fontWeight': 'bold',
+                'padding': '10px',
+                'border': '1px solid rgb(211, 47, 47)',
+                'borderRadius': '5px',
+                'backgroundColor': 'rgb(255, 235, 238)',
+                "margin-top": "10px",
+            })
+
+
 layout = html.Div([
     html.H1('Generador de segmentaciones'),
     dcc.Store(id='image-container'),
@@ -26,47 +49,66 @@ layout = html.Div([
         type="default",
         children = html.Div([
 
-        html.P('Generador automático de segmentaciones semánticas mediante modelos tipo ensemble '),
-        html.P("Indique la configuración a aplicar:"),
-        dbc.Container(
-            dbc.Card(
+        html.P('Generador automático de segmentaciones semánticas mediante modelos tipo ensemble ', className="p-info" ),
+        
+        dbc.Container([
+            
+
+            dbc.Card([
+
+                html.P("Configuración a aplicar:", className= "p-info", style = {"margin":" 0px 0px 20px 0px","font-size": "14px"}),
                 dbc.CardBody(
-                    dbc.Row([
-
-                        dbc.Col([
-                            html.Label("Modelo seleccionado", className="fw-bold mb-2"),
-                            dcc.Dropdown(id="dropdown-model-selected", label="Clases base", value=True)
-                        ], width=4),          
-
-
-                        dbc.Col([
-                            html.Label("Clases base", className="fw-bold mb-2"),
-                            dbc.Switch(id="switch-is-default-class", label="Clases base", value=True)
-                        ], width=4),
-
-                        # dbc.Col([
-                        #     html.Label("Sensibilidad", className="fw-bold mb-2"),
-                        #     dcc.Slider(id="slider-sensibility", label="Sensibilidad del ", value = 50,min = 0.1, max = 99.9, step= 0.1, tooltip={"placement": "bottom", "always_visible": True})
-                        # ], width=4),
-
-                        dbc.Col([
-                            dbc.Button(id="buttoon-inference", label="Activo", value=True, style={"display":"None"}, className="button-inference")
-                        ], width=4),
-                    ])
-                ),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                [
+                                    html.Label("Modelo seleccionado", className="fw-bold mb-2"),
+                                    dcc.Dropdown(id="dropdown-model-selected", value=models[0], options=models, style={"minWidth": "200px", "maxWidth": "300px"})
+                                ],
+                                style = {"maxWidth": "300px"},
+                                className="d-flex flex-column justify-content-center me-1"
+                            ),
+                            dbc.Col([
+                                html.Label("Inferencia Zero-Shot", className="fw-bold mb-2"),
+                                daq.BooleanSwitch(
+                                    id="switch-is-default-class", 
+                                    on=False,
+                                    className="my-auto",
+                                    color ="#1E1E1E",
+                                )],
+                                style = {"maxWidth": "300px"},
+                                className="d-flex align-items-center me-1"
+                            ),
+                            dbc.Col(
+                                dbc.Button(
+                                    html.Div([html.I(className= "fas fa-microchip"), html.Span("Calcular Inferencia")]),
+                                    id="buttoon-inference",
+                                    style={"display": "none"},
+                                    className="button-inference"
+                                ),
+                                style = {"maxWidth": "300px"},
+                                className="d-flex align-items-center"
+                            ),
+                        ],
+                        className="d-flex flex-row align-items-center mb-3",
+                        style={"display": "flex","justify-content": "space-between","align-items": "center"}
+                    )
+                )],
                 className="shadow-sm rounded",
-                style={"width": "90%", "margin": "2rem auto", "backgroundColor": "white"}
-            ),
+                
+            )],
             fluid=True,
-            className="d-flex justify-content-center align-items-center vh-100"
+            className="d-flex justify-content-center align-items-center vh-100 container-settings",
+            
         ),
         html.Div([
+        html.Div(id='output-data-upload'),
         dcc.Upload(
                 id='upload-data',
                 children=html.Div([
                     'Arrastre o ',
                     html.A('seleccione una imagen'),
-                    "(formatos soportados: png y jpg)"
+                    " (formatos soportados: png y jpg)"
                 ]),
                 style={
                     'width': '100%',
@@ -76,12 +118,12 @@ layout = html.Div([
                     'borderStyle': 'dashed',
                     'borderRadius': '5px',
                     'textAlign': 'center',
-                    'margin': '10px'
+                    "margin": "20px 0px"
                 },
                 # Allow multiple files to be uploaded
                 multiple=False
             ),
-            html.Div(id='output-data-upload'),
+            
         ])
     ], id = "layout")
 
@@ -102,10 +144,10 @@ def allow_inference(contents, filename):
     global FILENAME
 
     if contents is None:
-        return "No file uploaded", {"display": "none"}
+        return dash.no_update, {"display": "none"}
 
     if not (filename.lower().endswith('.png') or filename.lower().endswith('.jpg') or filename.lower().endswith('.jpeg')):
-        return "Formato no soportado (admite .png y .jpg)", {"display": "none"}
+        return CONS_DIV_ERROR_CASE1, {"display": "none"}
     try:
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
@@ -116,15 +158,25 @@ def allow_inference(contents, filename):
         STORE_IMG = np_array
         FILENAME = filename
 
-        return f"Imagen cargada: {filename}", {"display": "inline-block"}
+        log_success = html.Div(f"✅ Imagen cargada: {filename}", style={
+        'color': '#155724',
+        'backgroundColor': '#d4edda',
+        'border': '1px solid #c3e6cb',
+        'padding': '10px',
+        'borderRadius': '5px',
+        'fontWeight': 'bold',
+        'marginTop': '10px'
+    })
+
+        return log_success, {"display": "inline-block"}
 
     except Exception as e:
-        return f"Error en el procesamiento: {str(e)}", {"display": "none"}
+        return CONS_DIV_ERROR_CASE2,  {"display": "none"}
 
 @callback(Output('layout', 'children'),
               Input('buttoon-inference', 'n_clicks'),
               State('dropdown-model-selected', 'value'),
-              State('switch-is-default-class', 'valie'),
+              State('switch-is-default-class', 'on'),
 
         )
 def generate_inference(n_clicks, model, has_all_classes):

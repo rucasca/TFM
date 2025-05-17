@@ -107,7 +107,7 @@ layout = html.Div([
 
 
 @dash.callback(
-    Output("modal-img", "is-open"),
+    Output("modal-img", "is_open"),
     Output("modal-img", "children"),
     Input({"type": "selected-card", "index": dash.ALL}, "n_clicks")
 )
