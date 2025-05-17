@@ -233,3 +233,11 @@ def save_results(n_clicks):
 # loaded = np.load(full_path)
 # array1_loaded = loaded['array1']
 # array2_loaded = loaded['array2']
+
+
+
+def inference_retina_sam(image):
+    pass
+
+def inference_yolo_sam(image):
+    pass
