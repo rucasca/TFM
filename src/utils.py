@@ -347,7 +347,7 @@ def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
     rows=(n+1)//cols
 
     fig,axes = plt.subplots(rows, cols, figsize=(8*cols,6*rows))
-    axes=axes.flatten() if n>1 else [axes]
+    axes = axes.flatten() if n > 1 else [axes]
 
     id_objetives=category_info_objetive.keys()
 
@@ -359,7 +359,7 @@ def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
         ax.imshow(image)
         classess_found = []
 
-        for box, score, label in zip(result['boxes'],result['scores'],result['labels']):
+        for box,score,label in zip(result['boxes'],result['scores'],result['labels']):
             if label.item() in id_objetives and score>threshold:
                 #print("nueva clase que supera el umbral definido", label)
                 x_min, y_min, x_max, y_max = box
@@ -385,6 +385,53 @@ def plot_bounding_boxes(images, results, category_info_objetive, threshold=0.5):
 
     return
 
+
+# Idem para la anterior pero usando EEDD diferentes a tensores en los parametros
+def plot_bounding_boxes_non_tensor(images, results, category_info_objetive, threshold=0.5):
+
+    # Calculo del numero de filas necesarias (se colocan 2 por fila)
+    n = len(images)
+    cols=2
+    rows=(n+1)//cols
+
+    fig,axes = plt.subplots(rows, cols, figsize=(8*cols,6*rows))
+    axes = axes.flatten() #if n > 1 else [axes]
+
+    id_objetives=category_info_objetive.keys()
+
+    # idem que en las otras funciones, uso de un cto de colores predeterminado
+    color_map={cls: plt.cm.get_cmap('tab10')(i) for i, cls in enumerate(id_objetives)}
+    
+    for idx,(image,result) in enumerate(zip(images,results)):
+        ax = axes[idx]
+        ax.imshow(image)
+        classess_found = []
+
+        for box,score,label in zip(result['boxes'],result['scores'],result['labels']):
+            if label in id_objetives and score>threshold:
+                #print("nueva clase que supera el umbral definido", label)
+                x_min, y_min, x_max, y_max = box
+                width, height = x_max - x_min, y_max - y_min
+                color = color_map[label]
+                rect = patches.Rectangle((x_min, y_min),width,height,linewidth=2,
+                                         edgecolor=color,facecolor='none')
+                ax.add_patch(rect)
+                ax.text(x_min, y_min-10,f"P={score:.3f}",color='white',fontsize=10,
+                        bbox=dict(facecolor=color,edgecolor='none',pad=1.5))
+                classess_found.append(label)
+
+        handles=[mpatches.Patch(color=color_map[cls], label=category_info_objetive[cls])
+                   for cls in id_objetives if cls in classess_found]
+        ax.legend(handles=handles, loc='upper right')
+        ax.axis('off')
+
+    for i in range(len(images), len(axes)):
+        axes[i].axis('off')
+
+    plt.tight_layout()
+    plt.show()
+
+    return
 
 # def plot_bounding_boxes(image, result,category_info_objetive,threshold= 0.5):
 
