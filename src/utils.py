@@ -558,6 +558,58 @@ def plot_differences_batch(images, masks_gt, masks_predicted, class_id_to_name):
     return
 
 
+def plot_pipeline_yolo_sam_batch(images, masks_gt, masks_predicted, categories_names_by_index):
+
+    # tantas filas como imagenes, 3 columnas en total como anteriormente
+    n = len(images)
+    
+    colors = plt.cm.get_cmap('tab10',len(categories_names_by_index.keys()))  
+    print("colors are ", colors)
+    print("cats are ", categories_names_by_index)
+    
+    fig, axes = plt.subplots(n,3,figsize=(15,5*n))
+    if n == 1:
+        axes = np.expand_dims(axes,0)  # Ensure axes is 2D for consistency
+
+    for idx in range(n):
+
+        
+        image,mask_gt,mask_pred =images [idx],masks_gt[idx],masks_predicted[idx]
+        present_masks_image = sorted(np.union1d(masks_gt[idx],masks_predicted[idx]))
+        
+        axes[idx,0].imshow(image)
+        axes[idx,0].set_title(f"Imagen {idx}")
+        axes[idx,0].axis("off")
+
+
+        mask_colored_gt=np.zeros(image.shape,dtype=np.uint8)
+        for i,cid in enumerate(sorted(categories_names_by_index.keys())):
+            mask_colored_gt[mask_gt==cid]=(np.array(colors(i)[:3])*255).astype(np.uint8)
+        
+        axes[idx,1].imshow(mask_colored_gt)
+        axes[idx,1].set_title("Ground Truth")
+        axes[idx,1].axis("off")
+        
+        mask_colored_pred=np.zeros((*mask_pred.shape,3),dtype=np.uint8)
+        for i,cid in enumerate(sorted(categories_names_by_index.keys())):
+            mask_colored_pred[mask_pred==cid] =(np.array(colors(i)[:3])*255).astype(np.uint8)
+        
+        axes[idx,2].imshow(mask_colored_pred)
+        axes[idx,2].set_title("Máscaras predichas")
+        axes[idx,2].axis("off")
+
+        handles=[mpatches.Patch(color=colors(cid), label=categories_names_by_index[cid])
+                   for i, cid in enumerate(present_masks_image)]
+        axes[idx,2].legend(handles=handles,bbox_to_anchor=(1.052, 1),loc='upper left')
+    
+
+    
+    plt.tight_layout()
+    plt.show()
+
+    return
+
+
 # Encoder de la mascara para obtener su formato one hot encoded
 
 def one_hot_encoder_masks(mask, category_info_objective):
