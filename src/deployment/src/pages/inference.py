@@ -10,7 +10,7 @@ from PIL import Image
 import numpy as np
 import os
 import dash_daq as daq
-
+from utils_dash.model_inference import inference_yolo_sam
 
 
 dash.register_page(__name__, path  = "/", name = "Inferencia")
@@ -19,6 +19,8 @@ models = ["Retinanet + SAM", "UNET"]
 STORE_IMG = None
 RESULT_INFERENCE = None
 FILENAME = None
+
+
 
 
 CONS_DIV_ERROR_CASE1 = html.Div("❌ Formato no soportado (admite .png y .jpg)", style={
@@ -210,11 +212,11 @@ def generate_inference(n_clicks, model, has_all_classes):
 
 
 
-def get_plots_inference(image, model, has_all_classes):
+def get_plots_inference(image, model, has_all_classes, class_names):
 
     class_names = {
             1: "Class A", 2: "Class B", 3: "Class C", 4: "Class D", 5: "Class E",
-            6: "Class F", 7: "Class G", 8: "Class H", 9: "Class I", 10: "Class J"
+            6: "Class F", 7: "Class G", 8: "Class H", 9: "Class I", 10: "Class J", 0 : "backcground"
         }
     
     fig_rgb = px.imshow(image)
@@ -224,8 +226,11 @@ def get_plots_inference(image, model, has_all_classes):
     )
 
     # Create class label hover text
+    if(True):
+        class_map = inference_yolo_sam(image) 
 
-    class_map = generate_inference(image,model, has_all_classes)
+    ## TODO: include inference with more models
+
     hover_text = np.vectorize(class_names.get)(class_map)
 
     # Create class map figure with hover
@@ -288,8 +293,6 @@ def save_results(n_clicks):
 
 
 
-def inference_retina_sam(image):
-    pass
 
-def inference_yolo_sam(image):
-    pass
+
+

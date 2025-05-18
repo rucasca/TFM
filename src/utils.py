@@ -620,3 +620,20 @@ def one_hot_encoder_masks(mask, category_info_objective):
         one_hot_mask[i,:,:] = (mask==id_class).astype(np.uint8)
     
     return one_hot_mask
+
+
+
+
+########     SAM COMMON FUNCTIONS     ########
+
+def get_one_hot_scores(current_scores, mask,categories_names_by_index ):
+
+    one_hot_scores = np.zeros((len(categories_names_by_index), mask.shape[0], mask.shape[1]))
+
+    for clase in sorted(categories_names_by_index.keys()):
+
+        one_hot_scores[clase, :, :] = np.where(mask == clase,current_scores[ :, :]  , 0)
+
+    one_hot_scores[0, :, :] = 1 - one_hot_scores[1:, :, :].sum(axis=0)
+
+    return one_hot_scores
