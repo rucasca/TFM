@@ -32,6 +32,7 @@ navbar =  html.Div([
 
 
 app.layout = html.Div([
+    dcc.Location(id = "url"),
     navbar, 
     html.Div(dash.page_container , className= "content")
     

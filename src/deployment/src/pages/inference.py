@@ -21,6 +21,31 @@ RESULT_INFERENCE = None
 FILENAME = None
 
 
+#####   DEFAULT VALUES   #######
+
+CONS_CAT_INDEX_BY_NAME= {'background': 0,
+ 'person': 1,
+ 'car': 2,
+ 'motorcycle': 3,
+ 'bus': 4,
+ 'traffic light': 5,
+ 'backpack': 6,
+ 'handbag': 7,
+ 'chair': 8,
+ 'dining table': 9,
+ 'cell phone': 10}
+
+CONS_INFO_OBJ = {1: 'person',
+ 3: 'car',
+ 4: 'motorcycle',
+ 6: 'bus',
+ 10: 'traffic light',
+ 27: 'backpack',
+ 31: 'handbag',
+ 77: 'cell phone',
+ 62: 'chair',
+ 67: 'dining table',
+ 0: 'background'}
 
 
 CONS_DIV_ERROR_CASE1 = html.Div("❌ Formato no soportado (admite .png y .jpg)", style={
@@ -104,27 +129,34 @@ layout = html.Div([
             
         ),
         html.Div([
-        html.Div(id='output-data-upload'),
-        dcc.Upload(
-                id='upload-data',
-                children=html.Div([
-                    'Arrastre o ',
-                    html.A('seleccione una imagen'),
-                    " (formatos soportados: png y jpg)"
-                ]),
-                style={
-                    'width': '100%',
-                    'height': '60px',
-                    'lineHeight': '60px',
-                    'borderWidth': '1px',
-                    'borderStyle': 'dashed',
-                    'borderRadius': '5px',
-                    'textAlign': 'center',
-                    "margin": "20px 0px"
-                },
-                # Allow multiple files to be uploaded
-                multiple=False
-            ),
+            html.Div(id='output-data-upload'),
+            dcc.Upload(
+                    id='upload-data',
+                    children=html.Div([
+                        'Arrastre o ',
+                        html.A('seleccione una imagen'),
+                        " (formatos soportados: png y jpg)"
+                    ]),
+                    style={
+                        'width': '100%',
+                        'height': '60px',
+                        'lineHeight': '60px',
+                        'borderWidth': '1px',
+                        'borderStyle': 'dashed',
+                        'borderRadius': '5px',
+                        'textAlign': 'center',
+                        "margin": "20px 0px"
+                    },
+                    # Allow multiple files to be uploaded
+                    multiple=False
+                ),
+
+                html.Div(
+
+                    className= "button_save", id = "save-inference", style = {"display": "none"}
+                )
+
+
             
         ])
     ], id = "layout")
@@ -189,7 +221,7 @@ def generate_inference(n_clicks, model, has_all_classes):
     global STORE_IMG
     
 
-    fig1, fig2 =  get_plots_inference(STORE_IMG , model, has_all_classes)
+    fig1, fig2 =  get_plots_inference(STORE_IMG , model, has_all_classes, class_names=None)
 
 
     return  [
@@ -227,10 +259,11 @@ def get_plots_inference(image, model, has_all_classes, class_names):
 
     # Create class label hover text
     if(True):
-        class_map = inference_yolo_sam(image) 
+        print("processing inference")
+        class_map = inference_yolo_sam(image, threshold= 0.1, categories_index_by_name= CONS_CAT_INDEX_BY_NAME , category_info_objetive= CONS_INFO_OBJ) 
 
     ## TODO: include inference with more models
-
+    print("generating plot output")
     hover_text = np.vectorize(class_names.get)(class_map)
 
     # Create class map figure with hover
@@ -257,7 +290,7 @@ def get_plots_inference(image, model, has_all_classes, class_names):
 
 @dash.callback(
     Output("url", "pathname"),
-    Input('button_save', 'n_clicks')
+    Input('save-inference', 'n_clicks')
 
 )
 def save_results(n_clicks):

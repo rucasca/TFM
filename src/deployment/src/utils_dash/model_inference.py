@@ -57,6 +57,8 @@ def inference_yolo_sam(image, threshold, categories_index_by_name, category_info
     yolo_model = get_model_instance("yolo")
     sam_model = get_model_instance("sam")
 
+    print("models loaded")
+
     mask, _ = process_inference_yolo_sam(image, yolo_model, sam_model,threshold, categories_index_by_name, category_info_objetive)
 
 
@@ -82,6 +84,8 @@ def process_inference_yolo_sam(image, yolo_model, sam_model,threshold, categorie
             yolo_boxes.append( (x1,y1,x2,y2))
             yolo_prob.append(conf)
             yolo_label.append(categories_index_by_name[class_name])
+
+    print("yolo inefrence generated")
 
     inference = {}
     inference["boxes"] = yolo_boxes
@@ -120,7 +124,7 @@ def process_inference_yolo_sam(image, yolo_model, sam_model,threshold, categorie
                 final_mask = np.where(mask_values > current_scores , label, final_mask)
                 current_scores = np.maximum(mask_values, current_scores)
 
-
+    print("sam inference loaded")
     return final_mask[0], current_scores[0]
 
 
