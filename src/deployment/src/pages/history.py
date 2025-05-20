@@ -124,6 +124,7 @@ def on_card_click(n_clicks_list):
     dict_np_array = np.load(ruta)
     imagen = dict_np_array['image']
     inference = dict_np_array['inference']
+    model_name = dict_np_array['model_name'].item()
 
     plot1, plot2 = generate_plots_modal(imagen, inference)
 
@@ -133,7 +134,7 @@ def on_card_click(n_clicks_list):
         close_button=True
     ),
     dbc.ModalBody([
-        html.H4("Visualizaciones de Inferencia", className="text-center mb-4"),
+        html.H4(f"Resultados del modelo {model_name}", className="text-center mb-4"),
         dbc.Row([
             dbc.Col(dcc.Graph(figure=plot1), width=6),
             dbc.Col(dcc.Graph(figure=plot2), width=6),

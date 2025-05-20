@@ -36,6 +36,14 @@ def load_yaml_file() -> dict:
             return yaml.safe_load(file)
     
 
+# Guardado de los np arrays para ver en la web como ejemplo
+def save_np_array_web(image, mask, model_name):
+    path = r"C:\Users\ruben\Desktop\code_tfm\src\deployment\src\outputs"
+    filename = filename.split(".")[0] + ".npz"
+    full_path = os.path.join(path, filename)
+    np.savez(full_path, image=image, inference=mask, model_name = "UNET")
+
+    return
 
 # DESCARGA DE UN FICHERO ZIP
 def download_zip(url:str, destination_folder:str, zip_filename:str):
