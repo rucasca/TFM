@@ -25,7 +25,7 @@ def get_model_instance(model:str):
 
 
     elif(model == "sam"):
-        sam_checkpoint = r"C:\Users\ruben\Desktop\code_tfm\models\SAM\sam_vit_h_4b8939.pth"
+        sam_checkpoint = r"C:\Users\ruben\Desktop\code_tfm\models\SAM\sam_vit_b_01ec64.pth"# r"C:\Users\ruben\Desktop\code_tfm\models\SAM\sam_vit_h_4b8939.pth"
         model_type = "vit_h"
         sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         sam.to(device= "cpu" )

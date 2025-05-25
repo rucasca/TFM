@@ -257,6 +257,7 @@ def mask_generator_one_hot(coco,image_id, path_images, ids_masks : list, thresho
 
     return img,mask  
 
+
 ######  Funciones para representaciones gráficas  ########
 
 # Representacion de una imagen y sus máscaras dado su id
