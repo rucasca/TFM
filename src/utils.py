@@ -125,6 +125,29 @@ def save_numpy_array(np_array, nombre):
 
 #### TODO: generar el docstring de las funciones restantes
 
+def get_data_id_image(id_image, coco, DIR_TRAIN_IMGS,category_info_objetive ):
+
+    img_info = coco.loadImgs(id_image)[0]
+    height, width = img_info['height'], img_info['width']
+    img_path = f"{DIR_TRAIN_IMGS}/{img_info['file_name']}"
+
+    image = cv2.imread(img_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    ann_ids = coco.getAnnIds(imgIds=id_image)
+    anns = coco.loadAnns(ann_ids)
+    mask = np.zeros((height, width), dtype=np.uint8)
+
+    for ann in anns:
+        category_id = ann['category_id']
+
+        if(category_id in category_info_objetive.keys()):
+            binary_mask = coco.annToMask(ann)
+            mask[binary_mask == 1] = category_id
+
+    return image, mask
+
+
 
 ############    FUNCIONES DE PLOTTING    ###############
 
@@ -224,6 +247,19 @@ def mask_generator(coco,image_id, ids_masks : list ,path_images,  threshold = 20
     
     return img, mask   
 
+
+def preprocess_dataset_mask(mask,mapper_indexModel_index_result, categories_names_by_index):
+
+    mask_proprocessed = np.vectorize(lambda x: mapper_indexModel_index_result.get(x, x))(mask)
+    one_hot_scores = np.zeros((len(categories_names_by_index), mask.shape[0], mask.shape[1]))
+
+    for clase in sorted(categories_names_by_index.keys()):
+
+        one_hot_scores[clase, :, :] = np.where(mask_proprocessed == clase,1 , 0)
+
+    one_hot_scores[0, :, :] = 1 - one_hot_scores[1:, :, :].sum(axis=0)
+
+    return one_hot_scores
 
 # Idem pero en formato one hot encoded con N canales
 def mask_generator_one_hot(coco,image_id, path_images, ids_masks : list, threshold = 200):
