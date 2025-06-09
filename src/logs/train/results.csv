@@ -1,0 +1,2 @@
+Model,Mean_Pixel_Accuracy,Intersection_Over_Union,Mean_Average_Precission,Inference_Time
+Ensable_RetinaNet+SAM,0.6783972369442125,0.6088649888542157,0.6468666196713094,33.99400000000001
