@@ -10,15 +10,30 @@ from PIL import Image
 import numpy as np
 import os
 import dash_daq as daq
-from utils_dash.model_inference import inference_yolo_sam
-
+from utils_dash.model_inference import inference_model_pipeline
+import json
 
 dash.register_page(__name__, path  = "/", name = "Inferencia")
 
-models = ["Retinanet + SAM", "UNET"]
+models = ["Base U-Net","RetinaNet + SAM","Yolov8 + SAM","CLIP + SAM","RetinaNet + SAM + U-Net"]
 STORE_IMG = None
 RESULT_INFERENCE = None
 FILENAME = None
+
+DIR_CONSTANTS = r"inputs\constants.json"
+
+with open(DIR_CONSTANTS, 'r') as file:
+    CONSTANTS =json.load(file)
+
+
+OBJECTIVES = CONSTANTS["objetives"]
+CATEGORIES = CONSTANTS["categories"]
+
+ID_OBJECTIVES = CONSTANTS["id_objetives"]
+CATEGORY_INFO_OBJECTIVE = CONSTANTS["category_info_objetive"]
+
+DICT_CLASS_INDEX = CONSTANTS["dict_class_index"]
+CONS_TRHESHOLD = CONSTANTS["cons_threshold"]
 
 
 #####   DEFAULT VALUES   #######
@@ -96,7 +111,7 @@ layout = html.Div([
                                 className="d-flex flex-column justify-content-center me-1"
                             ),
                             dbc.Col([
-                                html.Label("Inferencia Zero-Shot", className="fw-bold mb-2"),
+                                html.Label("Segmentación ligera", className="fw-bold mb-2"),
                                 daq.BooleanSwitch(
                                     id="switch-is-default-class", 
                                     on=False,
@@ -246,10 +261,7 @@ def generate_inference(n_clicks, model, has_all_classes):
 
 def get_plots_inference(image, model, has_all_classes, class_names):
 
-    class_names = {
-            1: "Class A", 2: "Class B", 3: "Class C", 4: "Class D", 5: "Class E",
-            6: "Class F", 7: "Class G", 8: "Class H", 9: "Class I", 10: "Class J", 0 : "backcground"
-        }
+
     
     fig_rgb = px.imshow(image)
     fig_rgb.update_layout(
@@ -257,10 +269,8 @@ def get_plots_inference(image, model, has_all_classes, class_names):
         margin=dict(l=0, r=0, t=0, b=0),
     )
 
-    # Create class label hover text
-    if(True):
-        print("processing inference")
-        class_map = inference_yolo_sam(image, threshold= 0.1, categories_index_by_name= CONS_CAT_INDEX_BY_NAME , category_info_objetive= CONS_INFO_OBJ) 
+    print("processing inference")
+    class_map = inference_model_pipeline()
 
     ## TODO: include inference with more models
     print("generating plot output")

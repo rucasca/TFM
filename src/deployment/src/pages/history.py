@@ -99,7 +99,7 @@ def generate_plots_modal(image, inference):
 layout = html.Div([
     html.H1('Resultados guardados'),
     html.P("Los resultados guardados hasta el momento han sido los siguientes:"),
-    load_saved_inferences(),
+    #load_saved_inferences(),
     dbc.Modal(id = "modal-img", size="xl",is_open=False,backdrop="static" )
 ])
 
