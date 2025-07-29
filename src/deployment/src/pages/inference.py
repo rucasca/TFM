@@ -15,7 +15,14 @@ import json
 
 dash.register_page(__name__, path  = "/", name = "Inferencia")
 
-models = ["Base U-Net","RetinaNet + SAM","Yolov8 + SAM","CLIP + SAM","RetinaNet + SAM + U-Net"]
+MODELS = {"Base U-Net":"unet_base",
+          "RetinaNet + SAM": "retinanet_sam",
+          "Yolov8 + SAM": "yolo_sam",
+          "CLIP + SAM": "sam_clip",
+          "RetinaNet + SAM + U-Net": "final_model"}
+
+
+
 STORE_IMG = None
 RESULT_INFERENCE = None
 FILENAME = None
@@ -24,6 +31,7 @@ DIR_CONSTANTS = r"inputs\constants.json"
 
 with open(DIR_CONSTANTS, 'r') as file:
     CONSTANTS =json.load(file)
+    CONSTANTS["cons_threshold"] = 0.5
 
 
 OBJECTIVES = CONSTANTS["objetives"]
@@ -105,7 +113,7 @@ layout = html.Div([
                             dbc.Col(
                                 [
                                     html.Label("Modelo seleccionado", className="fw-bold mb-2"),
-                                    dcc.Dropdown(id="dropdown-model-selected", value=models[0], options=models, style={"minWidth": "200px", "maxWidth": "300px"})
+                                    dcc.Dropdown(id="dropdown-model-selected", value=list(MODELS.keys())[0], options=list(MODELS.keys()), style={"minWidth": "200px", "maxWidth": "300px"})
                                 ],
                                 style = {"maxWidth": "300px"},
                                 className="d-flex flex-column justify-content-center me-1"
@@ -189,6 +197,9 @@ layout = html.Div([
         )
 def allow_inference(contents, filename):
 
+
+    print("image trying to be saved")
+
     global STORE_IMG
     global FILENAME
 
@@ -257,11 +268,7 @@ def generate_inference(n_clicks, model, has_all_classes):
 
 
 
-
-
-def get_plots_inference(image, model, has_all_classes, class_names):
-
-
+def get_plots_inference(image, selected_model, has_all_classes, class_names):
     
     fig_rgb = px.imshow(image)
     fig_rgb.update_layout(
@@ -269,11 +276,11 @@ def get_plots_inference(image, model, has_all_classes, class_names):
         margin=dict(l=0, r=0, t=0, b=0),
     )
 
-    print("processing inference")
-    class_map = inference_model_pipeline()
+    #print("processing inference")
+    class_map = inference_model_pipeline(image = image, model = MODELS[selected_model])
 
     ## TODO: include inference with more models
-    print("generating plot output")
+    #print("generating plot output")
     hover_text = np.vectorize(class_names.get)(class_map)
 
     # Create class map figure with hover
