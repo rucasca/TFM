@@ -1,5 +1,7 @@
 import dash
 from dash import Dash, html, dcc
+import dash_bootstrap_components as dbc
+
 
 app = Dash(__name__, use_pages=True, external_stylesheets=[
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -29,6 +31,7 @@ navbar =  html.Div([
                     
         ) for i, page in enumerate(dash.page_registry.values())
     ], className= "navbar")
+
 
 
 app.layout = html.Div([

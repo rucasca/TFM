@@ -97,6 +97,7 @@ layout = html.Div([
     dcc.Store(id='image-container'),
     dcc.Loading(
         type="default",
+
         children = html.Div([
 
         html.P('Generador automático de segmentaciones semánticas mediante modelos tipo ensemble ', className="p-info" ),
@@ -174,10 +175,8 @@ layout = html.Div([
                     multiple=False
                 ),
 
-                html.Div(
+                html.Div(id='result-data-upload'),
 
-                    className= "button_save", id = "save-inference", style = {"display": "none"}
-                )
 
 
             
@@ -196,9 +195,6 @@ layout = html.Div([
               State('upload-data', 'filename')
         )
 def allow_inference(contents, filename):
-
-
-    print("image trying to be saved")
 
     global STORE_IMG
     global FILENAME
@@ -233,81 +229,50 @@ def allow_inference(contents, filename):
     except Exception as e:
         return CONS_DIV_ERROR_CASE2,  {"display": "none"}
 
-@callback(Output('layout', 'children'),
-              Input('buttoon-inference', 'n_clicks'),
-              State('dropdown-model-selected', 'value'),
-              State('switch-is-default-class', 'on'),
-
+@callback(
+        Output("result-data-upload", "children"),
+        Input('buttoon-inference', 'n_clicks'),
+        State('dropdown-model-selected', 'value'),
+        State('switch-is-default-class', 'on')
         )
 def generate_inference(n_clicks, model, has_all_classes):
 
     if(n_clicks == 0  or n_clicks == None):
         return dash.no_update
-
+    
     global STORE_IMG
     
 
-    fig1, fig2 =  get_plots_inference(STORE_IMG , model, has_all_classes, class_names=None)
-
-
-    return  [
-        html.H2(f"Imagen y resultado de la inferencia empleando {model}"),
-        html.Div([
-            dcc.Graph(figure=fig1, style={'width': '48%', 'display': 'inline-block'}),
-            dcc.Graph(figure=fig2, style={'width': '48%', 'display': 'inline-block'})
-        ]),
-
-        html.Div(
-            html.I(id = "save", className = "fa-floppy-disk" ),
-            html.Span("Guardar resultados"),
-            className= "button_save", id = "save-inference"
-        )
-
-
-    ]   
+    modal_result =  get_plots_inference(STORE_IMG , model, has_all_classes, class_names=None)
+ 
+    return modal_result
 
 
 
 def get_plots_inference(image, selected_model, has_all_classes, class_names):
     
-    fig_rgb = px.imshow(image)
-    fig_rgb.update_layout(
-        coloraxis_showscale=False,
-        margin=dict(l=0, r=0, t=0, b=0),
-    )
+    print("processing inference")
+    class_map, probs = inference_model_pipeline(image = image, type_model = MODELS[selected_model])
 
-    #print("processing inference")
-    class_map = inference_model_pipeline(image = image, model = MODELS[selected_model])
+    print("generating plot output")
+    fig1, fig2 = generate_plots_modal(image,class_map )
 
-    ## TODO: include inference with more models
-    #print("generating plot output")
-    hover_text = np.vectorize(class_names.get)(class_map)
+    print("generating new layout")
+    layout_card_save = generate_card_plot(fig1, fig2, model_name=selected_model)
 
-    # Create class map figure with hover
-    fig_class = go.Figure(data=go.Heatmap(
-        z=class_map,
-        text=hover_text,
-        hoverinfo='text',
-        colorscale='Viridis',
-        colorbar=dict(title='Class')
-    ))
-    fig_class.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
-    )
-    
     
 
     global RESULT_INFERENCE
     RESULT_INFERENCE = class_map
 
 
-    return fig_rgb,fig_class
+    return layout_card_save
 
 
 
 @dash.callback(
     Output("url", "pathname"),
-    Input('save-inference', 'n_clicks')
+    Input('save-modal', 'n_clicks')
 
 )
 def save_results(n_clicks):
@@ -326,23 +291,111 @@ def save_results(n_clicks):
     full_path = os.path.join(output_path, filename)
     np.savez(full_path, image=STORE_IMG, inference=RESULT_INFERENCE)
 
-
-
     return "/history"
 
 
-# <button><i class="fas fa-upload"></i> Upload</button> fa-cloud-upload-alt
-# <button><i class="fas fa-image"></i> Picture</button>
-# <button><i class="fas fa-floppy-disk"></i> Save</button> fas fa-floppy-disk
-# <button><i class="fas fa-clock-rotate-left"></i> History</button> fa-history
-# <button><i class="fas fa-plus"></i> Add</button> fa-circle-plus
 
-# loaded = np.load(full_path)
-# array1_loaded = loaded['array1']
-# array2_loaded = loaded['array2']
+def generate_plots_modal(image, inference):
+    fig_rgb = px.imshow(image)
+    fig_rgb.update_layout(
+        title = "Imagen original",
+        coloraxis_showscale=False,
+        margin=dict(l=40, r=10, t=60, b=40),
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False)
+    )
+
+    # print(f"·my image shape is {image.shape} and my inference shape is inference {inference.shape}" )
+
+    hover_text = np.vectorize(lambda x: f"{CATEGORY_INFO_OBJECTIVE.get(str(x), 'None')}")(inference)
+    flipped_inference = np.flipud(inference)
+    flipped_hover_text = np.flipud(hover_text)
+    fig_class = go.Figure(data=go.Heatmap(
+        z=flipped_inference,
+        text=flipped_hover_text,
+        hoverinfo='text',
+        colorscale='Viridis',
+        showscale=False,
+        colorbar=dict(title='Clase:')
+    ))
+    fig_class.update_layout(
+        title = "Predicción del modelo ",
+        margin=dict(l=40, r=10, t=60, b=40),
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False)
+    )
+
+    # fig_class.update_yaxes(scaleanchor="x", scaleratio=1)fig_rgb.update_xaxes(scaleanchor="y", constrain='domain')
+    fig_rgb.update_xaxes(scaleanchor="y", constrain='domain')
+    fig_rgb.update_yaxes(constrain='domain')
+
+    fig_class.update_xaxes(scaleanchor="y", constrain='domain')
+    fig_class.update_yaxes(constrain='domain')
+
+    return fig_rgb, fig_class
 
 
 
+def generate_card_plot(plot1, plot2, model_name):
+    content_modal = [
+        dbc.ModalHeader(
+            dbc.ModalTitle("Resultados de la inferencia", className="modal-title"),
+            close_button=True,
+            className="modal-header"
+        ),
+        dbc.ModalBody(
+            [
+                html.H4(
+                    f"Resultados del modelo {model_name}",
+                    className="text-center mb-4"
+                ),
+        html.Div(
+            [
+                html.Div(dcc.Graph(figure=plot1), style={"flex": "0 0 30%"}),
+                html.Div(dcc.Graph(figure=plot2), style={"flex": "0 0 30%"}),
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-around",  # space between items
+                "gap": "20px"  # gap between divs
+            }
+            )
+        ],
+            className="modal-body"
+        ),
+        dbc.ModalFooter(
+            [
+                dbc.Button(
+                    "Cerrar",
+                    id="close-modal",
+                    color="primary",
+                    style={
+                        "background-color": "#6f42c1",  # Bootstrap purple
+                        "border": "none",
+                        "box-shadow": "0 4px 8px rgba(0,0,0,0.2)",
+                        "transition": "0.3s",
+                    },
+                    className="me-2 custom-purple-btn"
+                ),
+                dbc.Button(
+                    "Guardar",
+                    id="save-modal",
+                    color="primary",
+                    style={
+                        "background-color": "#6f42c1",  # Lighter purple
+                        "border": "none",
+                        "box-shadow": "0 4px 8px rgba(0,0,0,0.2)",
+                        "transition": "0.3s",
+                    },
+                    className="custom-purple-btn"
+                ),
+            ],
+            className="modal-footer"
+        )
+    ]
+
+    result = dbc.Modal(id = "result-inference", is_open=True,backdrop="static", className="modal-content custom-centered-modal",keyboard=True, children=content_modal)
 
 
+    return result
 

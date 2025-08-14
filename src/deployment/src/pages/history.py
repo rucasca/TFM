@@ -122,17 +122,6 @@ def load_saved_inferences():
             titles.append(f"Inferencia de {model_name} ({formatted_date})")
 
     rows = []
-    # for i in range(0, len(images), 3):
-    #     row = dbc.Row(
-    #         [
-    #             dbc.Col(create_card(img, title = titles[i+j],   id_value = {"type": "selected-card", "index": i+j}), width=4)
-    #             for j, img in enumerate(images[i:i+3])
-    #         ],
-    #         className="mb-4",
-    #     )
-    #     rows.append(row)
-
-    rows = []
 
     for i in range(0, len(images), 3):
         row_cards = [
@@ -169,22 +158,39 @@ def load_saved_inferences():
 def generate_plots_modal(image, inference):
     fig_rgb = px.imshow(image)
     fig_rgb.update_layout(
+        title = "Imagen original",
         coloraxis_showscale=False,
-        margin=dict(l=0, r=0, t=0, b=0),
+        margin=dict(l=40, r=10, t=60, b=40),
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False)
     )
 
-    hover_text = np.vectorize(lambda x: f"{CATEGORY_INFO_OBJECTIVE.get(x, 'None')}")(inference)
+    # print(f"·my image shape is {image.shape} and my inference shape is inference {inference.shape}" )
 
+    hover_text = np.vectorize(lambda x: f"{CATEGORY_INFO_OBJECTIVE.get(str(x), 'None')}")(inference)
+    flipped_inference = np.flipud(inference)
+    flipped_hover_text = np.flipud(hover_text)
     fig_class = go.Figure(data=go.Heatmap(
-        z=inference,
-        text=hover_text,
+        z=flipped_inference,
+        text=flipped_hover_text,
         hoverinfo='text',
         colorscale='Viridis',
+        showscale=False,
         colorbar=dict(title='Clase:')
     ))
     fig_class.update_layout(
-        margin=dict(l=0, r=0, t=0, b=0),
+        title = "Predicción del modelo ",
+        margin=dict(l=40, r=10, t=60, b=40),
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False)
     )
+
+    # fig_class.update_yaxes(scaleanchor="x", scaleratio=1)fig_rgb.update_xaxes(scaleanchor="y", constrain='domain')
+    fig_rgb.update_xaxes(scaleanchor="y", constrain='domain')
+    fig_rgb.update_yaxes(constrain='domain')
+
+    fig_class.update_xaxes(scaleanchor="y", constrain='domain')
+    fig_class.update_yaxes(constrain='domain')
 
     return fig_rgb, fig_class
 
@@ -194,7 +200,9 @@ layout = html.Div([
     html.H1('Resultados guardados'),
     html.P("El histórico de resultados ha sido:"),
     load_saved_inferences(),
-    dbc.Modal(id = "modal-img", size="xl",is_open=False,backdrop="static" )
+
+    dbc.Modal(id = "modal-img", is_open=False,backdrop="static", className="modal-content custom-centered-modal",keyboard=True),
+
 ])
 
 
@@ -233,18 +241,35 @@ def on_card_click(n_clicks_list):
 
     plot1, plot2 = generate_plots_modal(imagen, inference)
 
-    results =  [
-    dbc.ModalHeader(
-        dbc.ModalTitle("Resultados de la inferencia en {}".format(target_file), className="w-100 text-center"),
-        close_button=True
-    ),
-    dbc.ModalBody([
-        html.H4(f"Resultados del modelo {model_name}", className="text-center mb-4"),
-        dbc.Row([
-            dbc.Col(dcc.Graph(figure=plot1), width=6),
-            dbc.Col(dcc.Graph(figure=plot2), width=6),
-        ])
-    ])
-]
-
+    results = [
+        dbc.ModalHeader(
+            dbc.ModalTitle("Resultados de la inferencia", className="modal-title"),
+            close_button=True,
+            className="modal-header"
+        ),
+        dbc.ModalBody(
+            [
+                html.H4(
+                    f"Resultados del modelo {model_name}",
+                    className="text-center mb-4"
+                ),
+        html.Div(
+            [
+                html.Div(dcc.Graph(figure=plot1), style={"flex": "0 0 30%"}),
+                html.Div(dcc.Graph(figure=plot2), style={"flex": "0 0 30%"}),
+            ],
+            style={
+                "display": "flex",
+                "justifyContent": "space-around",  # space between items
+                "gap": "20px"  # gap between divs
+            }
+            )
+        ],
+            className="modal-body"
+        ),
+        dbc.ModalFooter(
+            [],
+            className="modal-footer"
+        )
+    ]
     return True, results
