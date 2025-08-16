@@ -102,6 +102,10 @@ def create_card(image_data, title ,id_value ):
 def load_saved_inferences():
     images = []
     titles = []
+
+    if(len(os.listdir(path_input))==0):
+        return html.P("Ninguna segmentación realizada hasta la fecha")
+    
     for i, archivo in enumerate(os.listdir(path_input)):
         if archivo.endswith(".npz"):
             ruta = os.path.join(path_input, archivo)
@@ -235,7 +239,7 @@ def on_card_click(n_clicks_list):
     # print(f"{np.load(ruta).files=}")
     dict_np_array = np.load(ruta)
     imagen = dict_np_array['image']
-    inference = dict_np_array['result']
+    inference = dict_np_array['inference']
 
     model_name = target_file.split('_')[0]
 
@@ -250,7 +254,7 @@ def on_card_click(n_clicks_list):
         dbc.ModalBody(
             [
                 html.H4(
-                    f"Resultados del modelo {model_name}",
+                    f"Resultados del modelo {model_name}:",
                     className="text-center mb-4"
                 ),
         html.Div(

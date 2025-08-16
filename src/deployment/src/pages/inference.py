@@ -12,6 +12,8 @@ import os
 import dash_daq as daq
 from utils_dash.model_inference import inference_model_pipeline
 import json
+from datetime import datetime
+
 
 dash.register_page(__name__, path  = "/", name = "Inferencia")
 
@@ -271,23 +273,23 @@ def get_plots_inference(image, selected_model, has_all_classes, class_names):
 
 
 @dash.callback(
-    Output("url", "pathname"),
-    Input('save-modal', 'n_clicks')
+    Output("url", "pathname", allow_duplicate= True),
+    Input('save-modal', 'n_clicks'),
+    prevent_initial_call = True
 
 )
 def save_results(n_clicks):
 
-
-
+    if(n_clicks == 0 or n_clicks == None):
+        return dash.no_update
+    
     global STORE_IMG
     global RESULT_INFERENCE
     global FILENAME
 
-    if(n_clicks == 0 or n_clicks == None):
-        return dash.no_update
-
     output_path = r"C:\Users\ruben\Desktop\code_tfm\src\deployment\src\outputs"
-    filename = filename.split(".")[0] + ".npz"
+    filename_date = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = FILENAME.split(".")[0] + "_" + filename_date + ".npz"
     full_path = os.path.join(output_path, filename)
     np.savez(full_path, image=STORE_IMG, inference=RESULT_INFERENCE)
 
@@ -346,7 +348,7 @@ def generate_card_plot(plot1, plot2, model_name):
         dbc.ModalBody(
             [
                 html.H4(
-                    f"Resultados del modelo {model_name}",
+                    f"Resultados del modelo {model_name}:",
                     className="text-center mb-4"
                 ),
         html.Div(
@@ -375,7 +377,7 @@ def generate_card_plot(plot1, plot2, model_name):
                         "box-shadow": "0 4px 8px rgba(0,0,0,0.2)",
                         "transition": "0.3s",
                     },
-                    className="me-2 custom-purple-btn"
+                    className="me-2 custom-purple-btn modal-footer-button"
                 ),
                 dbc.Button(
                     "Guardar",
@@ -387,7 +389,7 @@ def generate_card_plot(plot1, plot2, model_name):
                         "box-shadow": "0 4px 8px rgba(0,0,0,0.2)",
                         "transition": "0.3s",
                     },
-                    className="custom-purple-btn"
+                    className="custom-purple-btn modal-footer-button"
                 ),
             ],
             className="modal-footer"
@@ -399,3 +401,16 @@ def generate_card_plot(plot1, plot2, model_name):
 
     return result
 
+
+@dash.callback(
+    Output("url", "pathname", allow_duplicate= True),
+    Input('close-modal', 'n_clicks'),
+    prevent_initial_call = True
+
+)
+def save_results(n_clicks):
+
+    if(n_clicks == 0 or n_clicks == None):
+        return dash.no_update
+    
+    return "/results"

@@ -60,7 +60,7 @@ def create_card(image_data, title ,id_value ):
     #         ),
     #     ],
     #     style={"width": "100%", "margin-bottom": "20px"},
-    #     id={"type": "selected-card", "index": id},
+    #     id={"type": "selected-card-result", "index": id},
     #     n_clicks = 0
     # )
 
@@ -129,7 +129,7 @@ def load_saved_inferences():
                 create_card(
                     img,
                     title=titles[i + j],
-                    id_value={"type": "selected-card", "index": i + j}
+                    id_value={"type": "selected-card-result", "index": i + j}
                 ),
                 style={
                     "flex": "1 1 30%",
@@ -197,11 +197,11 @@ def generate_plots_modal(image, inference):
 
 
 layout = html.Div([
-    html.H1('Predicciones realizadas'),
-    html.P("El historial de inferencias es tal que:"),
+    html.H1('Ejemplos'),
+    html.P("Algunas de las predicciones de ejemplo son tales que:"),
     load_saved_inferences(),
 
-    dbc.Modal(id = "modal-img", is_open=False,backdrop="static", className="modal-content custom-centered-modal",keyboard=True),
+    dbc.Modal(id = "modal-result-img", is_open=False,backdrop="static", className="modal-content custom-centered-modal",keyboard=True),
 
 ])
 
@@ -209,9 +209,9 @@ layout = html.Div([
 
 
 @dash.callback(
-    Output("modal-img", "is_open"),
-    Output("modal-img", "children"),
-    Input({"type": "selected-card", "index": dash.ALL}, "n_clicks"),
+    Output("modal-result-img", "is_open"),
+    Output("modal-result-img", "children"),
+    Input({"type": "selected-card-result", "index": dash.ALL}, "n_clicks"),
     prevent_initial_call=True
 )
 def on_card_click(n_clicks_list):
@@ -250,7 +250,7 @@ def on_card_click(n_clicks_list):
         dbc.ModalBody(
             [
                 html.H4(
-                    f"Resultados del modelo {model_name}",
+                    f"Resultados del modelo {model_name}:",
                     className="text-center mb-4"
                 ),
         html.Div(
