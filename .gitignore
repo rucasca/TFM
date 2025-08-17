@@ -4,8 +4,11 @@
 **.v2
 **.tfrecord
 
+# Se ignoran extensiones de modelos cargados en memoria
+**.pt
+
 # Se ignora todo lo del directioro data salvo el fichero data.json
-/data/*
+/data/
 !/data/data.json
 
 
