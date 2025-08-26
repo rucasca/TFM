@@ -252,10 +252,13 @@ label {
 .modal-header .btn-close {
     padding:0.5rem;
     margin: -0.5rem -0.5rem -0.5rem auto;
+
     background:transparent;
+
     border:0;
     font-size:1.5rem;
     line-height:1;
+    
     cursor:pointer;
     color:#000;
     opacity:0.5;
