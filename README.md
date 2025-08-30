@@ -1,44 +1,47 @@
-# Segmentación semántica del dataset COCO mediante UNET y arquitecturas ensemble 
+# Segmentación semántica del dataset COCO mediante U-Net y arquitecturas ensemble 
 
-
-A lo largo de este proyecto se aborda mediante diferentes notebooks el proceso completo de la resolución de un problema de **segmentación semántica** 🖼️ mediante diferentes **arquitecturas** tanto **convolucionales** como con arquitecturas que usan **mecanismos de atención**, además de su despliegue para la productivización mediante una aplicación web 🌐.
+A lo largo de este proyecto se aborda mediante diferentes aporximaciones el proceso completo de la resolución de un problema de **segmentación semántica** mediante diferentes arquitecturas tanto convolucionales más simples como con arquitecturas ensemble complejas conformadas por modelos fundacionales. Además, para la productivización de los diferentes modelos se incluye un aplicativo web que permite su uso de forma intuitiva y práctica para el usuario final.
 El trabajo se ha estructurado siguiendo la metodología `CRISP-DM`, organizada de la siguiente manera:
 
-### Comprensión del negocio (*Business Understanding* en CRISP_DM) y comprensión de los datos (*Data Understanding*) 🧠📊 
-En estas dos fases se incluye tanto el entendimeinto del objetivo del proyecto como una primera carga y evaluación del conjunto de datos, donde se detectan patrones que influirán en fases posteriores de la metodología con el objetivo de la obtención de los mejores resultados posibles que se adecuen de forma óptima al problema definido.
+### 1. *Business Understanding* y *Data Understanding* 📊 
+Abarcam tanto el entendimeinto del objetivo del proyecto como la carga y evaluación del conjunto de datos, con el objetivo de la detección de patrones que influirán en fases posteriores de la metodología. Con estas fases se busca la detección de insights que resulten en los mejores resultados posibles que se adecuen de forma óptima al problema definido.
 
-- La carga inicial y el entendimiento del objetivo se desarrollan en el notebook  [`src/01_data_loading.ipynb`](src/01_data_loading.ipynb).
+- La comprensión del negocio y la carga de datos se desarrollan en el notebook  [`src/01_data_loading.ipynb`](src/01_data_loading.ipynb).
 - El análisis exploratorio del conjunto de datos tiene lugar en el notebook [`src/02_exploratory_data_analysis.ipynb`](src/02_exploratory_data_analysis.ipynb).
 
 
-### Preparación de los datos (*Data Preparation*) 🛠️  
-A lo largo de esta fase se incluye la fase de comprensión de las imágenes en dimensiones comunes, la carga del dataset en un formato más eficiente para el entrenamiento de los modelos, en este caso `tf.tfrecord`, y el sampleamiento del conjunto de datos para disminuir el desvalanceo. Además, se definirá la fase de **data augmentation**, que permite la obtención de diferentes muestras a partir del conjunto de datos sampleado que forzarán al modelo a aprender.
+### 2. *Data Preparation* 🛠️  
+Fase que abarca la conversión y limpieza de las imágenes en un formato común (filtrado de clases, homogeneización de las dimentiones, casting a un formato común, en este caso `tf.tfrecord`, cambios en sus características, etc.) que permitan la obtención de los mejores resultados posibles en el entrenamiento de los modelos. Además, en esta se incluye la definición de la fase de data augmentation, usada para el entrenamieto de los modelos.
 
 El contenido de esta fase se desarrolla en el notebook [`src/03_data_preprocessing.ipynb`](src/03_data_preprocessing.ipynb).
 
-### Modelado de los Datos (*Modeling*) 🤖 
-Fase que comprende el entrenamiento de modelos que permitirán resolver el problema definido. En este caso los modelos y arquitecturas empleadas han sido:
-1) Modelo baseline, en este caso la UNET 🧬. Contenido en el notebook [`src/04_01_data_modeling_UNET.ipynb`](src/04_01_data_modeling_UNET.ipynb).
-2) Arquitectura ensemble empleando YoloV8 (no fundacional, pero entrenado en el mismo conjunto de datos) + SAM 🧪 . Desarrollada en el notebook [`src/04_02_data_modeling_YOLO_SAM.ipynb`](src/04_02_data_modeling_YOLO_SAM.ipynb).
-3) Arquitectura ensemble fundacional, con SAM + Retinanet 🧠 . Implementado en [`src/04_03_data_modeling_RetinaNet_SAM.ipynb`](src/04_03_data_modeling_RetinaNet_SAM.ipynb).
-4) Arquitectura ensemble inversa 🔄 , donde primero se segmenta y luego se clasifica, usando SAM + CLIP. Contenida en el notebook [`src/04_04_data_modeling_SAM_CLIP.ipynb`](src/04_04_data_modeling_SAM_CLIP.ipynb).
-5) Arquitectura ensemble final, donde primero se segmenta y luego se clasifica, usando SAM + CLIP. Contenida en el notebook [`src\04_05_data_modeling_final_model.ipynb`](src\04_05_data_modeling_final_model.ipynb).
+### 3. *Modeling* 🤖 
+Fase que comprende el entrenamiento de modelos que permitirán resolver el problema. Las arquitecturas propuestas han sido:
+1) Modelo baseline, en este caso la U-Net: contenido en el notebook [`src/04_01_data_modeling_UNET.ipynb`](src/04_01_data_modeling_UNET.ipynb).
+2) Arquitectura ensemble con YoloV8 + SAM: implementada en el notebook [`src/04_02_data_modeling_YOLO_SAM.ipynb`](src/04_02_data_modeling_YOLO_SAM.ipynb).
+3) Arquitectura ensemble con Retinanet + SAM: desarrollada en [`src/04_03_data_modeling_RetinaNet_SAM.ipynb`](src/04_03_data_modeling_RetinaNet_SAM.ipynb).
+4) Arquitectura ensemble inversa con SAM + CLIP: contenida en el notebook [`src/04_04_data_modeling_SAM_CLIP.ipynb`](src/04_04_data_modeling_SAM_CLIP.ipynb).
+5) Arquitectura ensemble final usando Retinanet + SAM + U-Net: desarrollada en el notebook [`src\04_05_data_modeling_final_model.ipynb`](src\04_05_data_modeling_final_model.ipynb).
 
+La arquitectura de este modelo final es la de la imagen siguiente:
 
-### Evaluación de los resultados (*Evaluation*) 📈 
+![Arquitectura del modelo final](assets/figs/final_model_pipeline.png)
 
-Se comparan los resultados obtenidos por cada uno de los modelos desarrollados atendiendo a diferentes criterios 📊 . 
+### 4. *Evaluation* 📈 
+
+Se comparan los resultados obtenidos por cada uno de los modelos desarrollados atendiendo a diferentes criterios que evaluen de forma efectiva el funcionamiento de los modelos.
 Esta comparativa de resultados tiene lugar en el fichero [`src/05_results_comparative.ipynb`](src/results_comparative.ipynb).
 
 
+### 5. *Deployment*🚀 
 
-### Implementación y productivización (*Deployment*)🚀 
-Fase que comprende la puesta en funcionamiento de pipelines que permiten el uso de los modelos en un entorno usable en la vida real. En este caso se ha productivizado el modelo mediante una aplicación web desarrollada en el framework `Dash` 💻 .
+Fase que comprende el desarrollo de un servicio web en en framework de Python `Dash` y la definición de las pipelines completas de los modelos para productivizar los modelos desarrollados en un formato web intuitivo.
 
-Esta puede ser encontrada en el directorio [`src/06_deployment/src/app.py`](src/06_deployment/src/app.py) y al inicializarla despliega en un puerto local un aplicativo web que permite el uso de los pipeline de las arquitecturas *ensemble* implementadas de forma intiutiva.
+Esta puede ser encontrada en el directorio [`src/06_deployment/src/app.py`](src/06_deployment/src/app.py).
+Una guia detallada con todos los elementos para el despliegue puede encontrarse en el siguiente enlace [https://github.com/rucasca/deployment_stacking_ensemble_segmentation_model](https://github.com/rucasca/deployment_stacking_ensemble_segmentation_model)
 
 
-
+### *Reproducción de los experimentos* 🔬
 
 Para la reproducción de los expermientos realizados se facilita un fichero `pyproject.toml` que contiene todas las librerias empleadas y sus versiones correspondientes.
 Para su instalación, se han de seguir los pasos siguientes: 
